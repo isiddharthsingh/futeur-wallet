@@ -42,17 +42,19 @@ export default function Login() {
       </div>
 
       <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
+        <div className="flex flex-col items-center mb-8">
           <div className="bg-primary/10 p-3 rounded-full">
             <Shield className="h-10 w-10 text-primary" />
           </div>
+          <h1 className="text-3xl font-bold mt-4 gradient-text">Futeur Wallet</h1>
+          <p className="text-sm text-muted-foreground mt-1">by Futeur Secure</p>
         </div>
         
         <Card className="border-border shadow-md">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">Vault Access</CardTitle>
+            <CardTitle className="text-2xl font-bold">Secure Access</CardTitle>
             <CardDescription>
-              Enter your credentials to access the company password vault
+              Enter your credentials to access the company password wallet
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -96,13 +98,13 @@ export default function Login() {
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Authenticating..." : "Login to Vault"}
+                {isLoading ? "Authenticating..." : "Access Wallet"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">
             <div>Protected company access. Unauthorized access is prohibited.</div>
-            <div>© {new Date().getFullYear()} Your Company Security</div>
+            <div>© {new Date().getFullYear()} Futeur Secure</div>
           </CardFooter>
         </Card>
       </div>

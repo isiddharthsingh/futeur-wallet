@@ -139,7 +139,10 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Key className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Vault Access</h1>
+            <div>
+              <h1 className="text-xl font-bold">Futeur Wallet</h1>
+              <p className="text-xs text-muted-foreground">by Futeur Secure</p>
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">
