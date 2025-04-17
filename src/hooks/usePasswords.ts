@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import CryptoJS from "crypto-js";
 
 interface Password {
   id: string;
@@ -20,16 +19,38 @@ export function usePasswords() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Function to encrypt data
-  const encryptData = (data: string, key: string) => {
-    return CryptoJS.AES.encrypt(data, key).toString();
+  // Simple encryption/decryption functions using Base64 and XOR
+  const encryptData = (text: string, key: string): string => {
+    // Create a simple XOR cipher with the key
+    const keyBytes = Array.from(key).map(char => char.charCodeAt(0));
+    
+    // XOR each character with the corresponding key character
+    const encryptedBytes = Array.from(text).map((char, i) => {
+      const charCode = char.charCodeAt(0);
+      const keyByte = keyBytes[i % keyBytes.length];
+      return String.fromCharCode(charCode ^ keyByte);
+    }).join('');
+    
+    // Convert to Base64 for storage
+    return btoa(encryptedBytes);
   };
 
-  // Function to decrypt data
-  const decryptData = (encryptedData: string, key: string) => {
+  // Decrypt function reverses the process
+  const decryptData = (encryptedBase64: string, key: string): string => {
     try {
-      const bytes = CryptoJS.AES.decrypt(encryptedData, key);
-      return bytes.toString(CryptoJS.enc.Utf8);
+      // Convert from Base64
+      const encryptedBytes = atob(encryptedBase64);
+      
+      // Apply XOR with the key
+      const keyBytes = Array.from(key).map(char => char.charCodeAt(0));
+      
+      const decryptedText = Array.from(encryptedBytes).map((char, i) => {
+        const charCode = char.charCodeAt(0);
+        const keyByte = keyBytes[i % keyBytes.length];
+        return String.fromCharCode(charCode ^ keyByte);
+      }).join('');
+      
+      return decryptedText;
     } catch (error) {
       console.error("Failed to decrypt data:", error);
       return "**Decryption Error**";
