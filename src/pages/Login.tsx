@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Lock } from "lucide-react";
@@ -10,6 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -87,6 +87,27 @@ export default function Login() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                       />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="px-0 text-sm"
+                        onClick={() => {
+                          const email = prompt("Please enter your email to receive a password reset link:");
+                          if (email) {
+                            supabase.auth.resetPasswordForEmail(email)
+                              .then(() => {
+                                toast.success("Password reset instructions sent to your email");
+                              })
+                              .catch((error) => {
+                                toast.error(error.message || "Failed to send reset instructions");
+                              });
+                          }
+                        }}
+                      >
+                        Forgot password?
+                      </Button>
                     </div>
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Signing in..." : "Sign In"}

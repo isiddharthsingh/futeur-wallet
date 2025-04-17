@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
 import { Card, CardContent } from "./ui/card"
 import { Separator } from "./ui/separator"
+import { Eye, EyeOff } from "lucide-react"
 
 const formSchema = z.object({
   username: z.string().min(2, {
@@ -29,13 +30,41 @@ const formSchema = z.object({
   }).optional().or(z.literal('')),
 })
 
+const passwordFormSchema = z.object({
+  currentPassword: z.string().min(6, {
+    message: "Current password is required",
+  }),
+  newPassword: z.string().min(6, {
+    message: "Password must be at least 6 characters.",
+  }),
+  confirmPassword: z.string().min(6, {
+    message: "Please confirm your new password.",
+  }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 export function SettingsForm() {
   const { user } = useAuth();
+  const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
+  const [showNewPassword, setShowNewPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       avatar_url: "",
+    },
+  });
+
+  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
@@ -79,6 +108,21 @@ export function SettingsForm() {
     }
 
     toast.success("Profile updated successfully");
+  }
+
+  async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
+    try {
+      const { error } = await supabase.auth.updateUser({ 
+        password: values.newPassword 
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully");
+      passwordForm.reset();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update password");
+    }
   }
 
   return (
@@ -159,6 +203,122 @@ export function SettingsForm() {
               />
 
               <Button type="submit">Save changes</Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">Change Password</h3>
+            <p className="text-sm text-muted-foreground">
+              Update your password to keep your account secure.
+            </p>
+          </div>
+          <Separator className="my-4" />
+          <Form {...passwordForm}>
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-8">
+              <FormField
+                control={passwordForm.control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Password</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input 
+                          type={showCurrentPassword ? "text" : "password"}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={passwordForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input 
+                          type={showNewPassword ? "text" : "password"}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <FormDescription>
+                      Password must be at least 6 characters long.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={passwordForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm New Password</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input 
+                          type={showConfirmPassword ? "text" : "password"}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit">Update Password</Button>
             </form>
           </Form>
         </CardContent>
