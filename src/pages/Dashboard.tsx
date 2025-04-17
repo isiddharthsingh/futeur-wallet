@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, PlusCircle, Key, LogOut, UserCircle, Settings, List, Grid } from "lucide-react";
@@ -15,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock data for password entries
 const mockPasswords = [
@@ -75,20 +75,20 @@ const mockPasswords = [
 ];
 
 export default function Dashboard() {
+  const { session, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!session) {
+      navigate('/login');
+    }
+  }, [session, navigate]);
+
   const [search, setSearch] = useState("");
   const [passwords, setPasswords] = useState(mockPasswords);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
-  const navigate = useNavigate();
-
-  // Check authentication
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [navigate]);
 
   // Filter passwords based on search
   const filteredPasswords = passwords.filter(
@@ -97,11 +97,6 @@ export default function Dashboard() {
       pwd.username.toLowerCase().includes(search.toLowerCase()) ||
       pwd.category.toLowerCase().includes(search.toLowerCase())
   );
-
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    navigate("/login");
-  };
 
   const handleEdit = (id: number) => {
     const passwordToEdit = passwords.find((pwd) => pwd.id === id);
@@ -130,6 +125,11 @@ export default function Dashboard() {
         { ...entry, id: newId, lastUpdated: "Just now" }
       ]);
     }
+  };
+
+  // Update the logout handler in the dropdown menu
+  const handleLogout = () => {
+    signOut();
   };
 
   return (

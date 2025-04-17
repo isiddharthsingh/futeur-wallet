@@ -7,31 +7,31 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  // Mock authentication - in a real app, this should use a proper auth system
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAuth = async (type: 'signin' | 'signup') => {
     setIsLoading(true);
-    setError("");
-
-    // Simple mock validation - replace with actual authentication
-    if (email === "admin@company.com" && password === "admin123") {
-      setTimeout(() => {
-        localStorage.setItem("isAuthenticated", "true");
-        navigate("/dashboard");
-      }, 1000);
-    } else {
-      setTimeout(() => {
-        setError("Invalid email or password");
-        setIsLoading(false);
-      }, 1000);
+    try {
+      if (type === 'signin') {
+        await signIn(email, password);
+        toast.success('Successfully signed in!');
+      } else {
+        await signUp(email, password);
+        toast.success('Registration successful! Please check your email to confirm your account.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,62 +50,83 @@ export default function Login() {
           <p className="text-sm text-muted-foreground mt-1">by Futeur Secure</p>
         </div>
         
-        <Card className="border-border shadow-md">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">Secure Access</CardTitle>
-            <CardDescription>
-              Enter your credentials to access the company password wallet
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center">Welcome</CardTitle>
+            <CardDescription className="text-center">
+              Sign in or create an account to continue
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              {error && (
-                <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
-                  {error}
-                </div>
-              )}
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="signin">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+              <TabsContent value="signin">
+                <form onSubmit={(e) => { e.preventDefault(); handleAuth('signin'); }}>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@company.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </div>
+                </form>
+              </TabsContent>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <a href="#" className="text-xs text-primary hover:underline">
-                    Forgot password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <Input 
-                    id="password" 
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Authenticating..." : "Access Wallet"}
-              </Button>
-            </form>
+              <TabsContent value="signup">
+                <form onSubmit={(e) => { e.preventDefault(); handleAuth('signup'); }}>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="name@company.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Creating account..." : "Create Account"}
+                    </Button>
+                  </div>
+                </form>
+              </TabsContent>
+            </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">
-            <div>Protected company access. Unauthorized access is prohibited.</div>
-            <div>© {new Date().getFullYear()} Futeur Secure</div>
-          </CardFooter>
         </Card>
       </div>
     </div>
