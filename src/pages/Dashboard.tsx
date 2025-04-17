@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, PlusCircle, Key, LogOut, UserCircle, Settings, List, Grid } from "lucide-react";
@@ -34,13 +33,9 @@ export default function Dashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
 
-  // Filter passwords based on search
-  const filteredPasswords = passwords.filter(
-    (pwd) =>
-      pwd.title.toLowerCase().includes(search.toLowerCase()) ||
-      pwd.username.toLowerCase().includes(search.toLowerCase()) ||
-      pwd.category.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleSettings = () => {
+    navigate('/settings');
+  };
 
   const handleEdit = (id: string) => {
     const passwordToEdit = passwords.find((pwd) => pwd.id === id);
@@ -78,7 +73,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -104,7 +98,7 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSettings}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
@@ -118,10 +112,8 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="container mx-auto px-4 py-6">
         <div className="flex flex-col space-y-6">
-          {/* Search and controls */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -162,7 +154,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Category tabs */}
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="mb-4">
               <TabsTrigger value="all">All</TabsTrigger>
@@ -214,7 +205,6 @@ export default function Dashboard() {
               </div>
             </TabsContent>
             
-            {/* Additional TabsContent for other categories */}
             <TabsContent value="cloud">
               <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col space-y-4"}>
                 {filteredPasswords
@@ -237,7 +227,6 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Password Dialog */}
       <PasswordDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
