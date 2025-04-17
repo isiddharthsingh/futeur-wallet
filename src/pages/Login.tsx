@@ -16,7 +16,9 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [resetEmail, setResetEmail] = useState("");
+  const [showResetForm, setShowResetForm] = useState(false);
+  const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const handleAuth = async (type: 'signin' | 'signup') => {
@@ -31,6 +33,20 @@ export default function Login() {
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await resetPassword(resetEmail);
+      toast.success('Password reset instructions sent to your email');
+      setShowResetForm(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset instructions');
     } finally {
       setIsLoading(false);
     }
@@ -59,95 +75,116 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+            {showResetForm ? (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="name@company.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-1/2"
+                    onClick={() => setShowResetForm(false)}
+                  >
+                    Back
+                  </Button>
+                  <Button type="submit" className="w-1/2" disabled={isLoading}>
+                    {isLoading ? "Sending..." : "Send Instructions"}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <Tabs defaultValue="signin" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="signin">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="signin">
-                <form onSubmit={(e) => { e.preventDefault(); handleAuth('signin'); }}>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@company.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="px-0 text-sm"
-                        onClick={() => {
-                          const email = prompt("Please enter your email to receive a password reset link:");
-                          if (email) {
-                            supabase.auth.resetPasswordForEmail(email)
-                              .then(() => {
-                                toast.success("Password reset instructions sent to your email");
-                              })
-                              .catch((error) => {
-                                toast.error(error.message || "Failed to send reset instructions");
-                              });
-                          }
-                        }}
-                      >
-                        Forgot password?
+                <TabsContent value="signin">
+                  <form onSubmit={(e) => { e.preventDefault(); handleAuth('signin'); }}>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="name@company.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="px-0 text-sm"
+                          onClick={() => {
+                            setResetEmail(email);
+                            setShowResetForm(true);
+                          }}
+                        >
+                          Forgot password?
+                        </Button>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Signing in..." : "Sign In"}
                       </Button>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Signing in..." : "Sign In"}
-                    </Button>
-                  </div>
-                </form>
-              </TabsContent>
+                  </form>
+                </TabsContent>
 
-              <TabsContent value="signup">
-                <form onSubmit={(e) => { e.preventDefault(); handleAuth('signup'); }}>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="name@company.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
+                <TabsContent value="signup">
+                  <form onSubmit={(e) => { e.preventDefault(); handleAuth('signup'); }}>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email">Email</Label>
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          placeholder="name@company.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password">Password</Label>
+                        <Input
+                          id="signup-password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Creating account..." : "Create Account"}
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Creating account..." : "Create Account"}
-                    </Button>
-                  </div>
-                </form>
-              </TabsContent>
-            </Tabs>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            )}
           </CardContent>
         </Card>
       </div>
