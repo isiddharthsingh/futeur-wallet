@@ -6,13 +6,14 @@ import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
-// Define form schema
 const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
   newPassword: z
     .string()
     .min(6, { message: "Password must be at least 6 characters long" }),
@@ -25,15 +26,16 @@ const passwordSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export function ChangePasswordForm() {
-  const { changePassword } = useAuth();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Initialize form with react-hook-form
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
+      currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     },
@@ -42,7 +44,25 @@ export function ChangePasswordForm() {
   async function onSubmit(values: PasswordFormValues) {
     setIsLoading(true);
     try {
-      await changePassword(values.newPassword);
+      // First verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || "",
+        password: values.currentPassword,
+      });
+
+      if (signInError) {
+        toast.error("Current password is incorrect");
+        setIsLoading(false);
+        return;
+      }
+
+      // If current password is correct, proceed with password update
+      const { error: updateError } = await supabase.auth.updateUser({ 
+        password: values.newPassword 
+      });
+
+      if (updateError) throw updateError;
+
       toast.success("Password changed successfully!");
       form.reset();
     } catch (error: any) {
@@ -63,6 +83,41 @@ export function ChangePasswordForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="currentPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Password</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        type={showCurrentPassword ? "text" : "password"}
+                        placeholder="Enter current password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-10 w-10"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                      <span className="sr-only">
+                        {showCurrentPassword ? "Hide password" : "Show password"}
+                      </span>
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="newPassword"
@@ -103,7 +158,7 @@ export function ChangePasswordForm() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel>Confirm New Password</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input
@@ -133,7 +188,7 @@ export function ChangePasswordForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Changing Password..." : "Change Password"}
             </Button>
           </form>
