@@ -19,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePasswords } from "@/hooks/usePasswords";
 
 export default function Dashboard() {
-  const { session, signOut } = useAuth();
+  const { session, user, signOut } = useAuth();
   const navigate = useNavigate();
   const { passwords, isLoading, addPassword, updatePassword } = usePasswords();
 
@@ -100,8 +100,8 @@ export default function Dashboard() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="flex flex-col space-y-1 p-2">
-                  <p className="text-sm font-medium">Admin User</p>
-                  <p className="text-xs text-muted-foreground">admin@company.com</p>
+                  <p className="text-sm font-medium">{user?.email || "User"}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
