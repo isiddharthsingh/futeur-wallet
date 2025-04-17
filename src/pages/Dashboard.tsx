@@ -15,68 +15,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Mock data for password entries
-const mockPasswords = [
-  {
-    id: 1,
-    title: "Company Email",
-    username: "admin@company.com",
-    password: "S3cureP@ss!",
-    url: "mail.company.com",
-    category: "Email",
-    lastUpdated: "2 days ago",
-  },
-  {
-    id: 2,
-    title: "AWS Console",
-    username: "company_admin",
-    password: "Cl0udAcce$$123",
-    url: "aws.amazon.com",
-    category: "Cloud",
-    lastUpdated: "1 week ago",
-  },
-  {
-    id: 3,
-    title: "GitHub",
-    username: "company-dev",
-    password: "GitHu8Dev!2023",
-    url: "github.com",
-    category: "Development",
-    lastUpdated: "3 days ago",
-  },
-  {
-    id: 4,
-    title: "Company CRM",
-    username: "sales_team",
-    password: "CRM@cce$$2023",
-    url: "crm.company.com",
-    category: "Sales",
-    lastUpdated: "Yesterday",
-  },
-  {
-    id: 5,
-    title: "Social Media",
-    username: "marketing@company.com",
-    password: "S0ci@lM3dia!",
-    url: "facebook.com",
-    category: "Marketing",
-    lastUpdated: "5 days ago",
-  },
-  {
-    id: 6,
-    title: "Company VPN",
-    username: "remote_access",
-    password: "VPNs3cur3!",
-    url: "vpn.company.com",
-    category: "Infrastructure",
-    lastUpdated: "2 weeks ago",
-  },
-];
+import { usePasswords } from "@/hooks/usePasswords";
 
 export default function Dashboard() {
   const { session, signOut } = useAuth();
   const navigate = useNavigate();
+  const { passwords, isLoading, addPassword, updatePassword } = usePasswords();
 
   useEffect(() => {
     if (!session) {
@@ -85,7 +29,6 @@ export default function Dashboard() {
   }, [session, navigate]);
 
   const [search, setSearch] = useState("");
-  const [passwords, setPasswords] = useState(mockPasswords);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
@@ -98,7 +41,7 @@ export default function Dashboard() {
       pwd.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     const passwordToEdit = passwords.find((pwd) => pwd.id === id);
     if (passwordToEdit) {
       setCurrentPassword(passwordToEdit);
@@ -113,24 +56,24 @@ export default function Dashboard() {
 
   const handleSavePassword = (entry: any) => {
     if (entry.id) {
-      // Update existing password
-      setPasswords((prev) =>
-        prev.map((pwd) => (pwd.id === entry.id ? { ...entry, lastUpdated: "Just now" } : pwd))
-      );
+      updatePassword.mutate(entry);
     } else {
-      // Add new password
-      const newId = Math.max(0, ...passwords.map((p) => p.id || 0)) + 1;
-      setPasswords((prev) => [
-        ...prev,
-        { ...entry, id: newId, lastUpdated: "Just now" }
-      ]);
+      addPassword.mutate(entry);
     }
+    setDialogOpen(false);
   };
 
-  // Update the logout handler in the dropdown menu
   const handleLogout = () => {
     signOut();
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

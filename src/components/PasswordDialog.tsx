@@ -19,9 +19,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PasswordEntry {
-  id?: number;
+  id?: string;
   title: string;
   username: string;
   password: string;
@@ -42,6 +43,7 @@ export function PasswordDialog({
   entry, 
   onSave 
 }: PasswordDialogProps) {
+  const { user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<PasswordEntry>({
     title: "",
@@ -51,7 +53,6 @@ export function PasswordDialog({
     category: "Other"
   });
 
-  // Initialize form data when entry changes
   useEffect(() => {
     if (entry) {
       setFormData(entry);
@@ -79,7 +80,11 @@ export function PasswordDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Add user_id when creating a new password
+    const passwordData = entry?.id 
+      ? formData 
+      : { ...formData, user_id: user?.id };
+    onSave(passwordData);
     onOpenChange(false);
   };
 
