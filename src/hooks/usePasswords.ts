@@ -46,6 +46,10 @@ export function usePasswords() {
   const { data: passwords = [], isLoading } = useQuery({
     queryKey: ["passwords"],
     queryFn: async () => {
+      if (!user) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("passwords")
         .select("*")
