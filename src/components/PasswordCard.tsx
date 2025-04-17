@@ -37,6 +37,13 @@ export function PasswordCard({
     setShowPassword(!showPassword);
   };
   
+  // Format date to a more readable format
+  const formattedDate = new Date(lastUpdated).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardHeader className="pb-2">
@@ -123,7 +130,7 @@ export function PasswordCard({
       </CardContent>
       <CardFooter className="pt-0 flex justify-between items-center">
         <div className="text-xs text-muted-foreground">
-          Updated {lastUpdated}
+          Updated {formattedDate}
         </div>
         <Button variant="outline" size="sm" onClick={onEdit}>
           Edit

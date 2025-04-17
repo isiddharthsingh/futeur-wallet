@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, PlusCircle, Key, LogOut, UserCircle, Settings, List, Grid } from "lucide-react";
@@ -186,7 +187,7 @@ export default function Dashboard() {
                       password={pwd.password}
                       url={pwd.url}
                       category={pwd.category}
-                      lastUpdated={pwd.lastUpdated}
+                      lastUpdated={pwd.updated_at}
                       onEdit={() => handleEdit(pwd.id)}
                     />
                   ))}
@@ -206,7 +207,7 @@ export default function Dashboard() {
                       password={pwd.password}
                       url={pwd.url}
                       category={pwd.category}
-                      lastUpdated={pwd.lastUpdated}
+                      lastUpdated={pwd.updated_at}
                       onEdit={() => handleEdit(pwd.id)}
                     />
                   ))}
@@ -226,7 +227,7 @@ export default function Dashboard() {
                       password={pwd.password}
                       url={pwd.url}
                       category={pwd.category}
-                      lastUpdated={pwd.lastUpdated}
+                      lastUpdated={pwd.updated_at}
                       onEdit={() => handleEdit(pwd.id)}
                     />
                   ))}

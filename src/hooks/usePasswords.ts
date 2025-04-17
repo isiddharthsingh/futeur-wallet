@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Password {
   id: string;
@@ -11,10 +12,12 @@ interface Password {
   url?: string;
   category: string;
   updated_at: string;
+  user_id: string;
 }
 
 export function usePasswords() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: passwords = [], isLoading } = useQuery({
     queryKey: ["passwords"],
@@ -35,7 +38,15 @@ export function usePasswords() {
 
   const addPassword = useMutation({
     mutationFn: async (newPassword: Omit<Password, "id" | "updated_at">) => {
-      const { error } = await supabase.from("passwords").insert([newPassword]);
+      if (!user) throw new Error("User must be logged in to add passwords");
+      
+      // Ensure user_id is included
+      const passwordWithUserId = {
+        ...newPassword,
+        user_id: user.id,
+      };
+      
+      const { error } = await supabase.from("passwords").insert([passwordWithUserId]);
       if (error) throw error;
     },
     onSuccess: () => {
