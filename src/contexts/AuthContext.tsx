@@ -17,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (_event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        setLoading(false);
       }
     );
 
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -56,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ session, user, signIn, signUp, signOut }}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }
