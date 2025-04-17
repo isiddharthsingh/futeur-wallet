@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, PlusCircle, Key, LogOut, UserCircle, Settings, List, Grid } from "lucide-react";
@@ -32,6 +33,14 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
+
+  // Filter passwords based on search term
+  const filteredPasswords = passwords.filter(
+    (pwd) => 
+      pwd.title.toLowerCase().includes(search.toLowerCase()) || 
+      pwd.username.toLowerCase().includes(search.toLowerCase()) ||
+      pwd.url.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleSettings = () => {
     navigate('/settings');
