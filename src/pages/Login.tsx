@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,14 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, signUp, resetPassword, session } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (session) {
+      navigate('/dashboard');
+    }
+  }, [session, navigate]);
 
   const handleAuth = async (type: 'signin' | 'signup') => {
     setIsLoading(true);
