@@ -17,11 +17,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePasswords } from "@/hooks/usePasswords";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 export default function Dashboard() {
   const { session, user, signOut } = useAuth();
   const navigate = useNavigate();
   const { passwords, isLoading, addPassword, updatePassword } = usePasswords();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!session) {
@@ -33,6 +37,7 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Filter passwords based on search term
   const filteredPasswords = passwords.filter(
@@ -70,6 +75,56 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     signOut();
+  };
+
+  const renderPasswordList = (passwords: any[]) => {
+    if (viewMode === "list") {
+      return (
+        <div className="overflow-x-auto w-full">
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead className="hidden sm:table-cell">Username</TableHead>
+                <TableHead className="hidden md:table-cell">Category</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {passwords.map((pwd) => (
+                <TableRow key={pwd.id}>
+                  <TableCell className="font-medium">{pwd.title}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{pwd.username}</TableCell>
+                  <TableCell className="hidden md:table-cell">{pwd.category}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(pwd.id)}>
+                      Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`grid grid-cols-1 ${isMobile ? "" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4`}>
+        {passwords.map((pwd) => (
+          <PasswordCard
+            key={pwd.id}
+            title={pwd.title}
+            username={pwd.username}
+            password={pwd.password}
+            url={pwd.url}
+            category={pwd.category}
+            lastUpdated={pwd.updated_at}
+            onEdit={() => handleEdit(pwd.id)}
+          />
+        ))}
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -123,54 +178,104 @@ export default function Dashboard() {
 
       <main className="container mx-auto px-4 py-6">
         <div className="flex flex-col space-y-6">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search passwords..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center border rounded-md overflow-hidden">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="icon"
-                  className="rounded-none h-10"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid className="h-4 w-4" />
-                  <span className="sr-only">Grid view</span>
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="icon"
-                  className="rounded-none h-10"
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="h-4 w-4" />
-                  <span className="sr-only">List view</span>
+          {isMobile ? (
+            <div className="flex flex-col space-y-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search passwords..."
+                  className="pl-9"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className="w-12 h-9 p-0"
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className="w-12 h-9 p-0"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button onClick={handleAddNew} size="sm">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add
                 </Button>
               </div>
-              
-              <Button onClick={handleAddNew}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Password
-              </Button>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search passwords..."
+                  className="pl-9"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center border rounded-md overflow-hidden">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="icon"
+                    className="rounded-none h-10"
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <Grid className="h-4 w-4" />
+                    <span className="sr-only">Grid view</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    size="icon"
+                    className="rounded-none h-10"
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="h-4 w-4" />
+                    <span className="sr-only">List view</span>
+                  </Button>
+                </div>
+                
+                <Button onClick={handleAddNew}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Password
+                </Button>
+              </div>
+            </div>
+          )}
 
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="email">Email</TabsTrigger>
-              <TabsTrigger value="cloud">Cloud</TabsTrigger>
-              <TabsTrigger value="development">Development</TabsTrigger>
-              <TabsTrigger value="sales">Sales</TabsTrigger>
-            </TabsList>
+            {!isMobile ? (
+              <TabsList className="mb-4">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="email">Email</TabsTrigger>
+                <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                <TabsTrigger value="development">Development</TabsTrigger>
+                <TabsTrigger value="sales">Sales</TabsTrigger>
+              </TabsList>
+            ) : (
+              <div className="mb-4 overflow-x-auto pb-2">
+                <TabsList className="inline-flex w-auto">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="email">Email</TabsTrigger>
+                  <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                  <TabsTrigger value="development">Dev</TabsTrigger>
+                  <TabsTrigger value="sales">Sales</TabsTrigger>
+                </TabsList>
+              </div>
+            )}
             
             <TabsContent value="all">
               {filteredPasswords.length === 0 ? (
@@ -178,59 +283,24 @@ export default function Dashboard() {
                   <p className="text-lg text-muted-foreground">No passwords match your search</p>
                 </div>
               ) : (
-                <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col space-y-4"}>
-                  {filteredPasswords.map((pwd) => (
-                    <PasswordCard
-                      key={pwd.id}
-                      title={pwd.title}
-                      username={pwd.username}
-                      password={pwd.password}
-                      url={pwd.url}
-                      category={pwd.category}
-                      lastUpdated={pwd.updated_at}
-                      onEdit={() => handleEdit(pwd.id)}
-                    />
-                  ))}
-                </div>
+                renderPasswordList(filteredPasswords)
               )}
             </TabsContent>
             
             <TabsContent value="email">
-              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col space-y-4"}>
-                {filteredPasswords
-                  .filter((pwd) => pwd.category === "Email")
-                  .map((pwd) => (
-                    <PasswordCard
-                      key={pwd.id}
-                      title={pwd.title}
-                      username={pwd.username}
-                      password={pwd.password}
-                      url={pwd.url}
-                      category={pwd.category}
-                      lastUpdated={pwd.updated_at}
-                      onEdit={() => handleEdit(pwd.id)}
-                    />
-                  ))}
-              </div>
+              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Email"))}
             </TabsContent>
             
             <TabsContent value="cloud">
-              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col space-y-4"}>
-                {filteredPasswords
-                  .filter((pwd) => pwd.category === "Cloud")
-                  .map((pwd) => (
-                    <PasswordCard
-                      key={pwd.id}
-                      title={pwd.title}
-                      username={pwd.username}
-                      password={pwd.password}
-                      url={pwd.url}
-                      category={pwd.category}
-                      lastUpdated={pwd.updated_at}
-                      onEdit={() => handleEdit(pwd.id)}
-                    />
-                  ))}
-              </div>
+              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Cloud"))}
+            </TabsContent>
+            
+            <TabsContent value="development">
+              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Development"))}
+            </TabsContent>
+            
+            <TabsContent value="sales">
+              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Sales"))}
             </TabsContent>
           </Tabs>
         </div>
