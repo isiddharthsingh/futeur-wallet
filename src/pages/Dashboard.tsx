@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, PlusCircle, Key, LogOut, UserCircle, Settings, List, Grid } from "lucide-react";
@@ -39,7 +38,6 @@ export default function Dashboard() {
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // Filter passwords based on search term
   const filteredPasswords = passwords.filter(
     (pwd) => 
       pwd.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -77,8 +75,10 @@ export default function Dashboard() {
     signOut();
   };
 
+  const showListView = !isMobile;
+
   const renderPasswordList = (passwords: any[]) => {
-    if (viewMode === "list") {
+    if (viewMode === "list" && !isMobile) {
       return (
         <div className="overflow-x-auto w-full">
           <Table className="w-full">
@@ -189,25 +189,7 @@ export default function Dashboard() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                    className="w-12 h-9 p-0"
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                    className="w-12 h-9 p-0"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
+              <div className="flex items-center justify-end">
                 <Button onClick={handleAddNew} size="sm">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add
@@ -227,26 +209,28 @@ export default function Dashboard() {
               </div>
               
               <div className="flex items-center space-x-2">
-                <div className="flex items-center border rounded-md overflow-hidden">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="icon"
-                    className="rounded-none h-10"
-                    onClick={() => setViewMode("grid")}
-                  >
-                    <Grid className="h-4 w-4" />
-                    <span className="sr-only">Grid view</span>
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
-                    size="icon"
-                    className="rounded-none h-10"
-                    onClick={() => setViewMode("list")}
-                  >
-                    <List className="h-4 w-4" />
-                    <span className="sr-only">List view</span>
-                  </Button>
-                </div>
+                {showListView && (
+                  <div className="flex items-center border rounded-md overflow-hidden">
+                    <Button
+                      variant={viewMode === "grid" ? "default" : "ghost"}
+                      size="icon"
+                      className="rounded-none h-10"
+                      onClick={() => setViewMode("grid")}
+                    >
+                      <Grid className="h-4 w-4" />
+                      <span className="sr-only">Grid view</span>
+                    </Button>
+                    <Button
+                      variant={viewMode === "list" ? "default" : "ghost"}
+                      size="icon"
+                      className="rounded-none h-10"
+                      onClick={() => setViewMode("list")}
+                    >
+                      <List className="h-4 w-4" />
+                      <span className="sr-only">List view</span>
+                    </Button>
+                  </div>
+                )}
                 
                 <Button onClick={handleAddNew}>
                   <PlusCircle className="mr-2 h-4 w-4" />
