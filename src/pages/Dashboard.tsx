@@ -80,31 +80,19 @@ export default function Dashboard() {
   const renderPasswordList = (passwords: any[]) => {
     if (viewMode === "list" && !isMobile) {
       return (
-        <div className="overflow-x-auto w-full">
-          <Table className="w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead className="hidden sm:table-cell">Username</TableHead>
-                <TableHead className="hidden md:table-cell">Category</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {passwords.map((pwd) => (
-                <TableRow key={pwd.id}>
-                  <TableCell className="font-medium">{pwd.title}</TableCell>
-                  <TableCell className="hidden sm:table-cell">{pwd.username}</TableCell>
-                  <TableCell className="hidden md:table-cell">{pwd.category}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(pwd.id)}>
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="space-y-4">
+          {passwords.map((pwd) => (
+            <PasswordCard
+              key={pwd.id}
+              title={pwd.title}
+              username={pwd.username}
+              password={pwd.password}
+              url={pwd.url}
+              category={pwd.category}
+              lastUpdated={pwd.updated_at}
+              onEdit={() => handleEdit(pwd.id)}
+            />
+          ))}
         </div>
       );
     }

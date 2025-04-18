@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, Copy, Check } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -21,23 +20,29 @@ export function PasswordCard({
   password, 
   url, 
   category, 
-  lastUpdated, 
+  lastUpdated,
   onEdit 
 }: PasswordCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedUsername, setCopiedUsername] = useState(false);
   
   const handleCopyPassword = () => {
     navigator.clipboard.writeText(password);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleCopyUsername = () => {
+    navigator.clipboard.writeText(username);
+    setCopiedUsername(true);
+    setTimeout(() => setCopiedUsername(false), 2000);
+  };
   
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
   
-  // Format date to a more readable format
   const formattedDate = new Date(lastUpdated).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -45,97 +50,97 @@ export function PasswordCard({
   });
   
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">{title}</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground mt-1">
-              {url && (
-                <a 
-                  href={url.startsWith('http') ? url : `https://${url}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  {url}
-                </a>
-              )}
-              {!url && "No URL provided"}
-            </CardDescription>
-          </div>
-          <Badge className="bg-accent text-accent-foreground hover:bg-accent/80">
-            {category}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-3 space-y-3">
+    <div className="bg-card rounded-lg border p-6 space-y-4 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start">
         <div className="space-y-1">
-          <div className="text-xs font-medium text-muted-foreground">Username</div>
+          <h3 className="text-xl font-semibold">{title}</h3>
+          {url ? (
+            <a 
+              href={url.startsWith('http') ? url : `https://${url}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              {url}
+            </a>
+          ) : (
+            <p className="text-sm text-muted-foreground">No URL provided</p>
+          )}
+        </div>
+        <Badge variant="outline" className="capitalize">
+          {category}
+        </Badge>
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">Username</label>
           <div className="flex items-center justify-between">
-            <div className="font-medium">{username}</div>
+            <span className="font-medium">{username}</span>
             <Button 
               variant="ghost" 
-              size="sm" 
-              onClick={() => {
-                navigator.clipboard.writeText(username);
-              }}
-              className="h-7 w-7 p-0"
+              size="sm"
+              onClick={handleCopyUsername}
+              className="h-8 w-8 p-0"
             >
-              <Copy className="h-3.5 w-3.5" />
+              {copiedUsername ? (
+                <Check className="h-4 w-4 text-success" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
               <span className="sr-only">Copy username</span>
             </Button>
           </div>
         </div>
-        
-        <div className="space-y-1">
-          <div className="text-xs font-medium text-muted-foreground">Password</div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">Password</label>
           <div className="flex items-center justify-between">
-            <div className="font-medium tracking-wider">
+            <span className="font-medium tracking-wider">
               {showPassword ? password : '•'.repeat(8)}
-            </div>
+            </span>
             <div className="flex space-x-1">
               <Button 
                 variant="ghost" 
-                size="sm" 
+                size="sm"
                 onClick={togglePasswordVisibility}
-                className="h-7 w-7 p-0"
+                className="h-8 w-8 p-0"
               >
                 {showPassword ? (
-                  <EyeOff className="h-3.5 w-3.5" />
+                  <EyeOff className="h-4 w-4" />
                 ) : (
-                  <Eye className="h-3.5 w-3.5" />
+                  <Eye className="h-4 w-4" />
                 )}
                 <span className="sr-only">
                   {showPassword ? "Hide password" : "Show password"}
                 </span>
               </Button>
-              
               <Button 
                 variant="ghost" 
-                size="sm" 
+                size="sm"
                 onClick={handleCopyPassword}
-                className="h-7 w-7 p-0"
+                className="h-8 w-8 p-0"
               >
                 {copied ? (
-                  <Check className="h-3.5 w-3.5 text-success" />
+                  <Check className="h-4 w-4 text-success" />
                 ) : (
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-4 w-4" />
                 )}
                 <span className="sr-only">Copy password</span>
               </Button>
             </div>
           </div>
         </div>
-      </CardContent>
-      <CardFooter className="pt-0 flex justify-between items-center">
-        <div className="text-xs text-muted-foreground">
+      </div>
+
+      <div className="flex justify-between items-center pt-2 border-t">
+        <span className="text-sm text-muted-foreground">
           Updated {formattedDate}
-        </div>
+        </span>
         <Button variant="outline" size="sm" onClick={onEdit}>
           Edit
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
