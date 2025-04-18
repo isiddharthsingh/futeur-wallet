@@ -1,27 +1,17 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, PlusCircle, Key, LogOut, UserCircle, Settings, List, Grid } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { PasswordCard } from "@/components/PasswordCard";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardControls } from "@/components/dashboard/DashboardControls";
+import { PasswordsList } from "@/components/dashboard/PasswordsList";
 import { PasswordDialog } from "@/components/PasswordDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePasswords } from "@/hooks/usePasswords";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 export default function Dashboard() {
-  const { session, user, signOut } = useAuth();
+  const { session } = useAuth();
   const navigate = useNavigate();
   const { passwords, isLoading, addPassword, updatePassword } = usePasswords();
   const isMobile = useIsMobile();
@@ -36,18 +26,13 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
-  const [filterOpen, setFilterOpen] = useState(false);
 
   const filteredPasswords = passwords.filter(
     (pwd) => 
       pwd.title.toLowerCase().includes(search.toLowerCase()) || 
       pwd.username.toLowerCase().includes(search.toLowerCase()) ||
-      pwd.url.toLowerCase().includes(search.toLowerCase())
+      pwd.url?.toLowerCase().includes(search.toLowerCase())
   );
-
-  const handleSettings = () => {
-    navigate('/settings');
-  };
 
   const handleEdit = (id: string) => {
     const passwordToEdit = passwords.find((pwd) => pwd.id === id);
@@ -71,50 +56,6 @@ export default function Dashboard() {
     setDialogOpen(false);
   };
 
-  const handleLogout = () => {
-    signOut();
-  };
-
-  const showListView = !isMobile;
-
-  const renderPasswordList = (passwords: any[]) => {
-    if (viewMode === "list" && !isMobile) {
-      return (
-        <div className="space-y-4">
-          {passwords.map((pwd) => (
-            <PasswordCard
-              key={pwd.id}
-              title={pwd.title}
-              username={pwd.username}
-              password={pwd.password}
-              url={pwd.url}
-              category={pwd.category}
-              lastUpdated={pwd.updated_at}
-              onEdit={() => handleEdit(pwd.id)}
-            />
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <div className={`grid grid-cols-1 ${isMobile ? "" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4`}>
-        {passwords.map((pwd) => (
-          <PasswordCard
-            key={pwd.id}
-            title={pwd.title}
-            username={pwd.username}
-            password={pwd.password}
-            url={pwd.url}
-            category={pwd.category}
-            lastUpdated={pwd.updated_at}
-            onEdit={() => handleEdit(pwd.id)}
-          />
-        ))}
-      </div>
-    );
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -125,108 +66,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Key className="h-6 w-6 text-primary" />
-            <div>
-              <h1 className="text-xl font-bold">Futeur Wallet</h1>
-              <p className="text-xs text-muted-foreground">by Futeur Secure</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <UserCircle className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="flex flex-col space-y-1 p-2">
-                  <p className="text-sm font-medium">{user?.email || "User"}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSettings}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       <main className="container mx-auto px-4 py-6">
         <div className="flex flex-col space-y-6">
-          {isMobile ? (
-            <div className="flex flex-col space-y-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search passwords..."
-                  className="pl-9"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center justify-end">
-                <Button onClick={handleAddNew} size="sm">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search passwords..."
-                  className="pl-9"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {showListView && (
-                  <div className="flex items-center border rounded-md overflow-hidden">
-                    <Button
-                      variant={viewMode === "grid" ? "default" : "ghost"}
-                      size="icon"
-                      className="rounded-none h-10"
-                      onClick={() => setViewMode("grid")}
-                    >
-                      <Grid className="h-4 w-4" />
-                      <span className="sr-only">Grid view</span>
-                    </Button>
-                    <Button
-                      variant={viewMode === "list" ? "default" : "ghost"}
-                      size="icon"
-                      className="rounded-none h-10"
-                      onClick={() => setViewMode("list")}
-                    >
-                      <List className="h-4 w-4" />
-                      <span className="sr-only">List view</span>
-                    </Button>
-                  </div>
-                )}
-                
-                <Button onClick={handleAddNew}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Password
-                </Button>
-              </div>
-            </div>
-          )}
+          <DashboardControls 
+            search={search}
+            onSearchChange={setSearch}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onAddNew={handleAddNew}
+          />
 
           <Tabs defaultValue="all" className="w-full">
             {!isMobile ? (
@@ -255,24 +105,44 @@ export default function Dashboard() {
                   <p className="text-lg text-muted-foreground">No passwords match your search</p>
                 </div>
               ) : (
-                renderPasswordList(filteredPasswords)
+                <PasswordsList 
+                  passwords={filteredPasswords}
+                  viewMode={viewMode}
+                  onEdit={handleEdit}
+                />
               )}
             </TabsContent>
             
             <TabsContent value="email">
-              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Email"))}
+              <PasswordsList 
+                passwords={filteredPasswords.filter((pwd) => pwd.category === "Email")}
+                viewMode={viewMode}
+                onEdit={handleEdit}
+              />
             </TabsContent>
             
             <TabsContent value="cloud">
-              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Cloud"))}
+              <PasswordsList 
+                passwords={filteredPasswords.filter((pwd) => pwd.category === "Cloud")}
+                viewMode={viewMode}
+                onEdit={handleEdit}
+              />
             </TabsContent>
             
             <TabsContent value="development">
-              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Development"))}
+              <PasswordsList 
+                passwords={filteredPasswords.filter((pwd) => pwd.category === "Development")}
+                viewMode={viewMode}
+                onEdit={handleEdit}
+              />
             </TabsContent>
             
             <TabsContent value="sales">
-              {renderPasswordList(filteredPasswords.filter((pwd) => pwd.category === "Sales"))}
+              <PasswordsList 
+                passwords={filteredPasswords.filter((pwd) => pwd.category === "Sales")}
+                viewMode={viewMode}
+                onEdit={handleEdit}
+              />
             </TabsContent>
           </Tabs>
         </div>
