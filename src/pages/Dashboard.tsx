@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -23,7 +22,6 @@ export default function Dashboard() {
   } = usePasswords();
   const isMobile = useIsMobile();
 
-  // Log complete details about passwords being loaded
   useEffect(() => {
     console.log("Dashboard received passwords:", {
       all: allPasswords.length,
@@ -47,8 +45,8 @@ export default function Dashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
   const [mainTab, setMainTab] = useState("all");
+  const [multiShareDialogOpen, setMultiShareDialogOpen] = useState(false);
 
-  // Filter passwords based on search term
   const filterPasswords = (passwords: any[]) => {
     return passwords.filter(
       (pwd) => 
@@ -90,6 +88,12 @@ export default function Dashboard() {
     setDialogOpen(false);
   };
 
+  const hasPasswordsToShare = ownPasswords.filter(pwd => !pwd.isShared).length > 0;
+
+  const handleMultiShare = () => {
+    setMultiShareDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -110,6 +114,8 @@ export default function Dashboard() {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             onAddNew={handleAddNew}
+            onMultiShare={handleMultiShare}
+            hasPasswordsToShare={hasPasswordsToShare}
           />
 
           <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
@@ -352,6 +358,12 @@ export default function Dashboard() {
         onOpenChange={setDialogOpen}
         entry={currentPassword}
         onSave={handleSavePassword}
+      />
+
+      <MultiSharePasswordDialog
+        open={multiShareDialogOpen}
+        onOpenChange={setMultiShareDialogOpen}
+        passwords={ownPasswords.filter(pwd => !pwd.isShared)}
       />
     </div>
   );

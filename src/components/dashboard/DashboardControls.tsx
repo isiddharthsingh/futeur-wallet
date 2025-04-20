@@ -1,5 +1,4 @@
-
-import { Grid, List, PlusCircle, Search } from "lucide-react";
+import { Grid, List, PlusCircle, Share } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -10,6 +9,8 @@ interface DashboardControlsProps {
   viewMode: "grid" | "list";
   onViewModeChange: (mode: "grid" | "list") => void;
   onAddNew: () => void;
+  onMultiShare: () => void;
+  hasPasswordsToShare: boolean;
 }
 
 export function DashboardControls({
@@ -18,6 +19,8 @@ export function DashboardControls({
   viewMode,
   onViewModeChange,
   onAddNew,
+  onMultiShare,
+  hasPasswordsToShare,
 }: DashboardControlsProps) {
   const isMobile = useIsMobile();
 
@@ -33,11 +36,26 @@ export function DashboardControls({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-        <div className="flex items-center justify-end">
-          <Button onClick={onAddNew} size="sm">
+        <div className="flex items-center justify-end space-x-2">
+          <Button 
+            onClick={onAddNew} 
+            size="sm"
+            className="flex items-center"
+          >
             <PlusCircle className="mr-2 h-4 w-4" />
             Add
           </Button>
+          {hasPasswordsToShare && (
+            <Button 
+              onClick={onMultiShare} 
+              size="sm" 
+              variant="outline"
+              className="flex items-center"
+            >
+              <Share className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -81,6 +99,17 @@ export function DashboardControls({
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Password
         </Button>
+
+        {hasPasswordsToShare && (
+          <Button 
+            onClick={onMultiShare} 
+            variant="outline"
+            className="flex items-center"
+          >
+            <Share className="mr-2 h-4 w-4" />
+            Share Multiple
+          </Button>
+        )}
       </div>
     </div>
   );
