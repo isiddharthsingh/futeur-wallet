@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      password_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          password_id: string | null
+          shared_by: string | null
+          shared_with: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          password_id?: string | null
+          shared_by?: string | null
+          shared_with?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          password_id?: string | null
+          shared_by?: string | null
+          shared_with?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "password_shares_password_id_fkey"
+            columns: ["password_id"]
+            isOneToOne: false
+            referencedRelation: "passwords"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passwords: {
         Row: {
           category: string
