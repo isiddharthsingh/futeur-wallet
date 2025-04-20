@@ -1,36 +1,27 @@
-
 import { Key, LogOut, Settings, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-
 export function DashboardHeader() {
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut
+  } = useAuth();
   const navigate = useNavigate();
-
   const handleSettings = () => {
     navigate('/settings');
   };
-
   const handleLogout = () => {
     signOut();
   };
-
-  return (
-    <header className="border-b border-border">
+  return <header className="border-b border-border">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Key className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-xl font-bold">Futeur Wallet</h1>
+            <h1 className="text-xl font-bold">Futeur Vault</h1>
             <p className="text-xs text-muted-foreground">by Futeur Secure</p>
           </div>
         </div>
@@ -62,6 +53,5 @@ export function DashboardHeader() {
           </DropdownMenu>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 }
