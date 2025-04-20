@@ -1,5 +1,5 @@
 
-import { Grid, List, PlusCircle, Share, Search } from "lucide-react";
+import { Grid, List, PlusCircle, Share } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -51,6 +51,7 @@ export function DashboardControls({
               onClick={onMultiShare} 
               size="sm" 
               variant="outline"
+              style={{ backgroundColor: '#F97316', color: 'white' }}
               className="flex items-center"
             >
               <Share className="mr-2 h-4 w-4" />
@@ -104,7 +105,7 @@ export function DashboardControls({
         {hasPasswordsToShare && (
           <Button 
             onClick={onMultiShare} 
-            variant="outline"
+            style={{ backgroundColor: '#F97316', color: 'white' }}
             className="flex items-center"
           >
             <Share className="mr-2 h-4 w-4" />
