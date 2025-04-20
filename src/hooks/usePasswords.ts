@@ -127,19 +127,32 @@ export function usePasswords() {
         return decryptedOwnPasswords;
       }
       
-      // Fetch the actual shared password records using the IDs
-      // Using a more direct approach with explicit type casting
-      const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
-        .from("passwords")
-        .select("*")
-        .in("id", sharedPasswordIds as string[]);
+      // Fetch each shared password individually to work around potential RLS issues
+      let sharedPasswords: any[] = [];
       
-      if (sharedPasswordsError) {
-        console.error("Error fetching shared passwords:", sharedPasswordsError);
-        toast.error("Failed to fetch shared password details");
-        return decryptedOwnPasswords; // Return own passwords even if shared fetch fails
+      for (const passwordId of sharedPasswordIds) {
+        try {
+          // Fetch the individual password by ID
+          const { data, error } = await supabase
+            .from("passwords")
+            .select("*")
+            .eq("id", passwordId)
+            .single();
+          
+          if (error) {
+            console.error(`Error fetching shared password ${passwordId}:`, error);
+            continue; // Skip this password but continue with others
+          }
+          
+          if (data) {
+            sharedPasswords.push(data);
+            console.log(`Successfully fetched shared password: ${data.title}`);
+          }
+        } catch (err) {
+          console.error(`Error processing shared password ${passwordId}:`, err);
+        }
       }
-
+      
       console.log("Shared passwords fetched:", sharedPasswords?.length, "Details:", sharedPasswords);
       
       // If no shared passwords were found, return only own passwords
