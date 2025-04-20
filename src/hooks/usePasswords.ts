@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,6 +15,19 @@ interface Password {
   user_id: string;
   created_at?: string;
   isShared?: boolean;
+}
+
+// The interface for the database password (doesn't have isShared field)
+interface DbPassword {
+  id: string;
+  title: string;
+  username: string;
+  password: string;
+  url?: string;
+  category: string;
+  updated_at: string;
+  user_id: string;
+  created_at?: string;
 }
 
 export function usePasswords() {
@@ -90,7 +104,7 @@ export function usePasswords() {
 
       // Process own passwords (decrypt them)
       const encryptionKey = getEncryptionKey(user.id);
-      const decryptedOwnPasswords = ownPasswords.map(pwd => ({
+      const decryptedOwnPasswords = ownPasswords.map((pwd: DbPassword) => ({
         ...pwd,
         password: decryptData(pwd.password, encryptionKey),
         username: decryptData(pwd.username, encryptionKey),
@@ -101,7 +115,7 @@ export function usePasswords() {
       const sharedPasswords = sharedWithMe
         .filter(share => share.passwords)
         .map(share => {
-          const pwd = share.passwords as Password;
+          const pwd = share.passwords as DbPassword;
           if (!pwd) return null;
           
           // Decrypt using the owner's encryption key

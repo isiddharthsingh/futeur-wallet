@@ -1,3 +1,4 @@
+
 import { PasswordCard } from "@/components/PasswordCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,11 @@ export function PasswordsList({ passwords, viewMode, onEdit, currentUserId }: Pa
   const shouldUseGrid = isMobile || viewMode === "grid";
   const [multiShareOpen, setMultiShareOpen] = useState(false);
 
-  const ownPasswords = passwords.filter(pwd => !pwd.isShared);
+  // Filter out shared passwords to only show own passwords for multi-sharing
+  const ownPasswords = passwords.filter(pwd => !pwd.isShared && pwd.user_id === currentUserId);
 
   console.log("PasswordsList rendering with passwords:", passwords.length);
+  console.log("Own passwords for sharing:", ownPasswords.length);
   if (passwords.length > 0) {
     console.log("First password:", passwords[0].title, "Shared:", passwords[0].isShared);
   }
@@ -43,6 +46,7 @@ export function PasswordsList({ passwords, viewMode, onEdit, currentUserId }: Pa
           <Button 
             variant="outline" 
             onClick={() => setMultiShareOpen(true)}
+            className="flex items-center"
           >
             <Share className="mr-2 h-4 w-4" />
             Share Multiple Passwords
