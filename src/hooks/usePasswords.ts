@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,7 +12,8 @@ interface Password {
   category: string;
   updated_at: string;
   user_id: string;
-  isShared?: boolean; // Added isShared property
+  created_at?: string;
+  isShared?: boolean;
 }
 
 export function usePasswords() {

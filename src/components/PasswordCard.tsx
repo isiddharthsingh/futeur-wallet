@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Eye, EyeOff, Copy, Check, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -153,14 +152,16 @@ export function PasswordCard({
           </span>
           <div className="flex gap-2">
             {!isShared && (
-              <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
-                <Share className="mr-2 h-4 w-4" />
-                Share
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
+                  <Share className="mr-2 h-4 w-4" />
+                  Share
+                </Button>
+                <Button variant="outline" size="sm" onClick={onEdit}>
+                  Edit
+                </Button>
+              </>
             )}
-            <Button variant="outline" size="sm" onClick={onEdit}>
-              Edit
-            </Button>
           </div>
         </div>
       </div>
