@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Eye, EyeOff, Copy, Check, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ interface PasswordCardProps {
   category: string;
   lastUpdated: string;
   onEdit: () => void;
+  isShared?: boolean;
 }
 
 export function PasswordCard({ 
@@ -23,7 +25,8 @@ export function PasswordCard({
   url, 
   category, 
   lastUpdated,
-  onEdit 
+  onEdit,
+  isShared = false
 }: PasswordCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -71,9 +74,16 @@ export function PasswordCard({
               <p className="text-sm text-muted-foreground">No URL provided</p>
             )}
           </div>
-          <Badge variant="outline" className="capitalize">
-            {category}
-          </Badge>
+          <div className="flex gap-2">
+            {isShared && (
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                Shared
+              </Badge>
+            )}
+            <Badge variant="outline" className="capitalize">
+              {category}
+            </Badge>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -142,10 +152,12 @@ export function PasswordCard({
             Updated {formattedDate}
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
-              <Share className="mr-2 h-4 w-4" />
-              Share
-            </Button>
+            {!isShared && (
+              <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
+                <Share className="mr-2 h-4 w-4" />
+                Share
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={onEdit}>
               Edit
             </Button>

@@ -11,7 +11,7 @@ import { usePasswords } from "@/hooks/usePasswords";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Dashboard() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const navigate = useNavigate();
   const { passwords, isLoading, addPassword, updatePassword } = usePasswords();
   const isMobile = useIsMobile();
@@ -109,6 +109,7 @@ export default function Dashboard() {
                   passwords={filteredPasswords}
                   viewMode={viewMode}
                   onEdit={handleEdit}
+                  currentUserId={user?.id}
                 />
               )}
             </TabsContent>
@@ -118,6 +119,7 @@ export default function Dashboard() {
                 passwords={filteredPasswords.filter((pwd) => pwd.category === "Email")}
                 viewMode={viewMode}
                 onEdit={handleEdit}
+                currentUserId={user?.id}
               />
             </TabsContent>
             
@@ -126,6 +128,7 @@ export default function Dashboard() {
                 passwords={filteredPasswords.filter((pwd) => pwd.category === "Cloud")}
                 viewMode={viewMode}
                 onEdit={handleEdit}
+                currentUserId={user?.id}
               />
             </TabsContent>
             
@@ -134,6 +137,7 @@ export default function Dashboard() {
                 passwords={filteredPasswords.filter((pwd) => pwd.category === "Development")}
                 viewMode={viewMode}
                 onEdit={handleEdit}
+                currentUserId={user?.id}
               />
             </TabsContent>
             
@@ -142,6 +146,7 @@ export default function Dashboard() {
                 passwords={filteredPasswords.filter((pwd) => pwd.category === "Sales")}
                 viewMode={viewMode}
                 onEdit={handleEdit}
+                currentUserId={user?.id}
               />
             </TabsContent>
           </Tabs>

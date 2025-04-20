@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -83,13 +82,10 @@ export function usePasswords() {
         throw ownError;
       }
 
-      // Fetch shared passwords
-      const { data: sharedPasswordsData, error: sharedError } = await supabase
+      // Fetch shared passwords - use a more direct approach to get the actual password records
+      const { data: passwordShares, error: sharedError } = await supabase
         .from("password_shares")
-        .select(`
-          password_id,
-          passwords (*)
-        `)
+        .select("password_id")
         .eq("shared_with", user.id);
 
       if (sharedError) {
@@ -97,16 +93,35 @@ export function usePasswords() {
         throw sharedError;
       }
 
-      // Extract the actual password objects from the shared data
-      const sharedPasswords = sharedPasswordsData
-        .filter(share => share.passwords) // Make sure passwords exist
-        .map(share => share.passwords);
+      // If there are no shared passwords, just return the own passwords
+      if (!passwordShares || passwordShares.length === 0) {
+        const encryptionKey = getEncryptionKey();
+        return ownPasswords.map(pwd => ({
+          ...pwd,
+          password: decryptData(pwd.password, encryptionKey),
+          username: decryptData(pwd.username, encryptionKey)
+        }));
+      }
+
+      // Extract the password IDs that have been shared with the user
+      const sharedPasswordIds = passwordShares.map(share => share.password_id);
+      
+      // Fetch the actual shared password records using the IDs
+      const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
+        .from("passwords")
+        .select("*")
+        .in("id", sharedPasswordIds);
+      
+      if (sharedPasswordsError) {
+        toast.error("Failed to fetch shared password details");
+        throw sharedPasswordsError;
+      }
 
       // Combine own and shared passwords
       const encryptionKey = getEncryptionKey();
       const allPasswords = [
         ...ownPasswords,
-        ...sharedPasswords
+        ...(sharedPasswords || [])
       ].map(pwd => ({
         ...pwd,
         password: decryptData(pwd.password, encryptionKey),

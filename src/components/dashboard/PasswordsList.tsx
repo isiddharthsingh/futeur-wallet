@@ -10,15 +10,17 @@ interface Password {
   url?: string;
   category: string;
   updated_at: string;
+  user_id: string;
 }
 
 interface PasswordsListProps {
   passwords: Password[];
   viewMode: "grid" | "list";
   onEdit: (id: string) => void;
+  currentUserId?: string;
 }
 
-export function PasswordsList({ passwords, viewMode, onEdit }: PasswordsListProps) {
+export function PasswordsList({ passwords, viewMode, onEdit, currentUserId }: PasswordsListProps) {
   const isMobile = useIsMobile();
   const shouldUseGrid = isMobile || viewMode === "grid";
 
@@ -35,6 +37,7 @@ export function PasswordsList({ passwords, viewMode, onEdit }: PasswordsListProp
           category={pwd.category}
           lastUpdated={pwd.updated_at}
           onEdit={() => onEdit(pwd.id)}
+          isShared={pwd.user_id !== currentUserId}
         />
       ))}
     </div>
