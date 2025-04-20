@@ -23,6 +23,19 @@ export default function Dashboard() {
   } = usePasswords();
   const isMobile = useIsMobile();
 
+  // Log complete details about passwords being loaded
+  useEffect(() => {
+    console.log("Dashboard received passwords:", {
+      all: allPasswords.length,
+      own: ownPasswords.length,
+      shared: sharedPasswords.length
+    });
+    
+    if (sharedPasswords.length > 0) {
+      console.log("First shared password:", sharedPasswords[0]);
+    }
+  }, [allPasswords, ownPasswords, sharedPasswords]);
+
   useEffect(() => {
     if (!session) {
       navigate('/login');
@@ -48,6 +61,12 @@ export default function Dashboard() {
   const filteredAllPasswords = filterPasswords(allPasswords);
   const filteredOwnPasswords = filterPasswords(ownPasswords);
   const filteredSharedPasswords = filterPasswords(sharedPasswords);
+
+  console.log("Filtered password counts:", {
+    all: filteredAllPasswords.length,
+    own: filteredOwnPasswords.length,
+    shared: filteredSharedPasswords.length
+  });
 
   const handleEdit = (id: string) => {
     const passwordToEdit = allPasswords.find((pwd) => pwd.id === id);

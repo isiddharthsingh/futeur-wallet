@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -119,7 +118,6 @@ export function usePasswords() {
       console.log("Shared password IDs:", sharedPasswordIds);
       
       // Fetch the actual shared password records using the IDs
-      // Fix: Use standard select without the inner join syntax
       const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
         .from("passwords")
         .select("*")
