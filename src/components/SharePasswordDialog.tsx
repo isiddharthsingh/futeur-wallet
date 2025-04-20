@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,15 +26,30 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
 
     setIsSharing(true);
     try {
-      // First, get the user ID for the provided email
-      const { data: userResults, error: userError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', email)
-        .single();
+      // Use our custom function to find the user ID by email
+      const { data: userId, error: userError } = await supabase.rpc('get_user_id_by_email', {
+        email_input: email
+      });
 
-      if (userError || !userResults) {
-        toast.error("User not found");
+      if (userError) {
+        console.error("Error looking up user:", userError);
+        toast.error("Error looking up user");
+        setIsSharing(false);
+        return;
+      }
+
+      if (!userId) {
+        toast.error("User not found. Make sure the email address is correct.");
+        setIsSharing(false);
+        return;
+      }
+
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to share passwords");
+        setIsSharing(false);
         return;
       }
 
@@ -43,16 +58,18 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
         .from('password_shares')
         .insert({
           password_id: passwordId,
-          shared_with: userResults.id,
-          shared_by: (await supabase.auth.getUser()).data.user?.id
+          shared_with: userId,
+          shared_by: user.id
         });
 
       if (shareError) {
         if (shareError.code === '23505') {
           toast.error("Password already shared with this user");
         } else {
+          console.error("Share error:", shareError);
           toast.error("Failed to share password");
         }
+        setIsSharing(false);
         return;
       }
 
@@ -60,6 +77,7 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
       setEmail("");
       onOpenChange(false);
     } catch (error) {
+      console.error("Unexpected error:", error);
       toast.error("An error occurred while sharing");
     } finally {
       setIsSharing(false);
@@ -71,6 +89,9 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Share Password</DialogTitle>
+          <DialogDescription>
+            Enter the email address of the user you want to share this password with.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
@@ -78,6 +99,7 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
             <Label htmlFor="email">Share with (email)</Label>
             <Input
               id="email"
+              type="email"
               placeholder="Enter user email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
