@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -101,7 +102,7 @@ export function usePasswords() {
       const sharedPasswords = sharedWithMe
         .filter(share => share.passwords)
         .map(share => {
-          const pwd = share.passwords;
+          const pwd = share.passwords as Password;  // Type assertion to fix the error
           if (!pwd) return null;
           
           // Decrypt using the owner's encryption key
@@ -113,7 +114,7 @@ export function usePasswords() {
             isShared: true
           };
         })
-        .filter(Boolean);
+        .filter(Boolean) as Password[];  // Type assertion to filter out null values
 
       console.log("Shared passwords processed:", sharedPasswords.length);
       
