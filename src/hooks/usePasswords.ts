@@ -119,10 +119,10 @@ export function usePasswords() {
       console.log("Shared password IDs:", sharedPasswordIds);
       
       // Fetch the actual shared password records using the IDs
-      // KEY FIX: Use .in() correctly with the array of IDs
+      // Fix: Use standard select without the inner join syntax
       const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
         .from("passwords")
-        .select("*, user_id!inner") // Make sure we get the user_id for owner's key
+        .select("*")
         .in("id", sharedPasswordIds);
       
       if (sharedPasswordsError) {
