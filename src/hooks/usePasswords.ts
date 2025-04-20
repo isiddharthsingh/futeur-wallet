@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -74,6 +75,7 @@ export function usePasswords() {
       const { data: ownPasswords, error: ownError } = await supabase
         .from("passwords")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (ownError) {
@@ -82,7 +84,7 @@ export function usePasswords() {
       }
 
       // Fetch shared passwords
-      const { data: sharedPasswords, error: sharedError } = await supabase
+      const { data: sharedPasswordsData, error: sharedError } = await supabase
         .from("password_shares")
         .select(`
           password_id,
@@ -95,11 +97,16 @@ export function usePasswords() {
         throw sharedError;
       }
 
-      // Combine and decrypt passwords
+      // Extract the actual password objects from the shared data
+      const sharedPasswords = sharedPasswordsData
+        .filter(share => share.passwords) // Make sure passwords exist
+        .map(share => share.passwords);
+
+      // Combine own and shared passwords
       const encryptionKey = getEncryptionKey();
       const allPasswords = [
         ...ownPasswords,
-        ...sharedPasswords.map(share => share.passwords)
+        ...sharedPasswords
       ].map(pwd => ({
         ...pwd,
         password: decryptData(pwd.password, encryptionKey),
