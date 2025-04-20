@@ -27,6 +27,7 @@ export function PasswordsList({ passwords, viewMode, onEdit }: PasswordsListProp
       {passwords.map((pwd) => (
         <PasswordCard
           key={pwd.id}
+          id={pwd.id}
           title={pwd.title}
           username={pwd.username}
           password={pwd.password}
