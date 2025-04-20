@@ -121,16 +121,23 @@ export function usePasswords() {
       // Debug: Check if the ID array is properly formatted
       console.log("Password IDs type:", typeof sharedPasswordIds, "Is array:", Array.isArray(sharedPasswordIds));
       
+      // Convert string array to proper format for .in query if needed
+      if (sharedPasswordIds.length === 0) {
+        console.log("No shared password IDs found after mapping");
+        return decryptedOwnPasswords;
+      }
+      
       // Fetch the actual shared password records using the IDs
+      // Using a more direct approach with explicit type casting
       const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
         .from("passwords")
         .select("*")
-        .in("id", sharedPasswordIds);
+        .in("id", sharedPasswordIds as string[]);
       
       if (sharedPasswordsError) {
         console.error("Error fetching shared passwords:", sharedPasswordsError);
         toast.error("Failed to fetch shared password details");
-        throw sharedPasswordsError;
+        return decryptedOwnPasswords; // Return own passwords even if shared fetch fails
       }
 
       console.log("Shared passwords fetched:", sharedPasswords?.length, "Details:", sharedPasswords);
