@@ -13,7 +13,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export default function Dashboard() {
   const { session, user } = useAuth();
   const navigate = useNavigate();
-  const { passwords, isLoading, addPassword, updatePassword } = usePasswords();
+  const { 
+    allPasswords, 
+    ownPasswords,
+    sharedPasswords,
+    isLoading, 
+    addPassword, 
+    updatePassword 
+  } = usePasswords();
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -26,16 +33,24 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<any | undefined>(undefined);
+  const [mainTab, setMainTab] = useState("all");
 
-  const filteredPasswords = passwords.filter(
-    (pwd) => 
-      pwd.title.toLowerCase().includes(search.toLowerCase()) || 
-      pwd.username.toLowerCase().includes(search.toLowerCase()) ||
-      pwd.url?.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter passwords based on search term
+  const filterPasswords = (passwords: any[]) => {
+    return passwords.filter(
+      (pwd) => 
+        pwd.title.toLowerCase().includes(search.toLowerCase()) || 
+        pwd.username.toLowerCase().includes(search.toLowerCase()) ||
+        pwd.url?.toLowerCase().includes(search.toLowerCase())
+    );
+  };
+
+  const filteredAllPasswords = filterPasswords(allPasswords);
+  const filteredOwnPasswords = filterPasswords(ownPasswords);
+  const filteredSharedPasswords = filterPasswords(sharedPasswords);
 
   const handleEdit = (id: string) => {
-    const passwordToEdit = passwords.find((pwd) => pwd.id === id);
+    const passwordToEdit = allPasswords.find((pwd) => pwd.id === id);
     if (passwordToEdit) {
       setCurrentPassword(passwordToEdit);
       setDialogOpen(true);
@@ -78,76 +93,236 @@ export default function Dashboard() {
             onAddNew={handleAddNew}
           />
 
-          <Tabs defaultValue="all" className="w-full">
-            {!isMobile ? (
-              <TabsList className="mb-4">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="email">Email</TabsTrigger>
-                <TabsTrigger value="cloud">Cloud</TabsTrigger>
-                <TabsTrigger value="development">Development</TabsTrigger>
-                <TabsTrigger value="sales">Sales</TabsTrigger>
-              </TabsList>
-            ) : (
-              <div className="mb-4 overflow-x-auto pb-2">
-                <TabsList className="inline-flex w-auto">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="email">Email</TabsTrigger>
-                  <TabsTrigger value="cloud">Cloud</TabsTrigger>
-                  <TabsTrigger value="development">Dev</TabsTrigger>
-                  <TabsTrigger value="sales">Sales</TabsTrigger>
-                </TabsList>
-              </div>
-            )}
+          <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">All Passwords</TabsTrigger>
+              <TabsTrigger value="my-passwords">My Passwords</TabsTrigger>
+              <TabsTrigger value="shared-with-me">Shared with Me</TabsTrigger>
+            </TabsList>
             
             <TabsContent value="all">
-              {filteredPasswords.length === 0 ? (
+              <Tabs defaultValue="all" className="w-full">
+                {!isMobile ? (
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="email">Email</TabsTrigger>
+                    <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                    <TabsTrigger value="development">Development</TabsTrigger>
+                    <TabsTrigger value="sales">Sales</TabsTrigger>
+                  </TabsList>
+                ) : (
+                  <div className="mb-4 overflow-x-auto pb-2">
+                    <TabsList className="inline-flex w-auto">
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="email">Email</TabsTrigger>
+                      <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                      <TabsTrigger value="development">Dev</TabsTrigger>
+                      <TabsTrigger value="sales">Sales</TabsTrigger>
+                    </TabsList>
+                  </div>
+                )}
+                
+                <TabsContent value="all">
+                  {filteredAllPasswords.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-lg text-muted-foreground">No passwords match your search</p>
+                    </div>
+                  ) : (
+                    <PasswordsList 
+                      passwords={filteredAllPasswords}
+                      viewMode={viewMode}
+                      onEdit={handleEdit}
+                      currentUserId={user?.id}
+                    />
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="email">
+                  <PasswordsList 
+                    passwords={filteredAllPasswords.filter((pwd) => pwd.category === "Email")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="cloud">
+                  <PasswordsList 
+                    passwords={filteredAllPasswords.filter((pwd) => pwd.category === "Cloud")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="development">
+                  <PasswordsList 
+                    passwords={filteredAllPasswords.filter((pwd) => pwd.category === "Development")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="sales">
+                  <PasswordsList 
+                    passwords={filteredAllPasswords.filter((pwd) => pwd.category === "Sales")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+            
+            <TabsContent value="my-passwords">
+              <Tabs defaultValue="all" className="w-full">
+                {!isMobile ? (
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="email">Email</TabsTrigger>
+                    <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                    <TabsTrigger value="development">Development</TabsTrigger>
+                    <TabsTrigger value="sales">Sales</TabsTrigger>
+                  </TabsList>
+                ) : (
+                  <div className="mb-4 overflow-x-auto pb-2">
+                    <TabsList className="inline-flex w-auto">
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="email">Email</TabsTrigger>
+                      <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                      <TabsTrigger value="development">Dev</TabsTrigger>
+                      <TabsTrigger value="sales">Sales</TabsTrigger>
+                    </TabsList>
+                  </div>
+                )}
+                
+                <TabsContent value="all">
+                  {filteredOwnPasswords.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-lg text-muted-foreground">No passwords match your search</p>
+                    </div>
+                  ) : (
+                    <PasswordsList 
+                      passwords={filteredOwnPasswords}
+                      viewMode={viewMode}
+                      onEdit={handleEdit}
+                      currentUserId={user?.id}
+                    />
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="email">
+                  <PasswordsList 
+                    passwords={filteredOwnPasswords.filter((pwd) => pwd.category === "Email")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="cloud">
+                  <PasswordsList 
+                    passwords={filteredOwnPasswords.filter((pwd) => pwd.category === "Cloud")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="development">
+                  <PasswordsList 
+                    passwords={filteredOwnPasswords.filter((pwd) => pwd.category === "Development")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="sales">
+                  <PasswordsList 
+                    passwords={filteredOwnPasswords.filter((pwd) => pwd.category === "Sales")}
+                    viewMode={viewMode}
+                    onEdit={handleEdit}
+                    currentUserId={user?.id}
+                  />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+            
+            <TabsContent value="shared-with-me">
+              {filteredSharedPasswords.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-lg text-muted-foreground">No passwords match your search</p>
+                  <p className="text-lg text-muted-foreground">No shared passwords found</p>
                 </div>
               ) : (
-                <PasswordsList 
-                  passwords={filteredPasswords}
-                  viewMode={viewMode}
-                  onEdit={handleEdit}
-                  currentUserId={user?.id}
-                />
+                <Tabs defaultValue="all" className="w-full">
+                  {!isMobile ? (
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="email">Email</TabsTrigger>
+                      <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                      <TabsTrigger value="development">Development</TabsTrigger>
+                      <TabsTrigger value="sales">Sales</TabsTrigger>
+                    </TabsList>
+                  ) : (
+                    <div className="mb-4 overflow-x-auto pb-2">
+                      <TabsList className="inline-flex w-auto">
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="email">Email</TabsTrigger>
+                        <TabsTrigger value="cloud">Cloud</TabsTrigger>
+                        <TabsTrigger value="development">Dev</TabsTrigger>
+                        <TabsTrigger value="sales">Sales</TabsTrigger>
+                      </TabsList>
+                    </div>
+                  )}
+                  
+                  <TabsContent value="all">
+                    <PasswordsList 
+                      passwords={filteredSharedPasswords}
+                      viewMode={viewMode}
+                      onEdit={handleEdit}
+                      currentUserId={user?.id}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="email">
+                    <PasswordsList 
+                      passwords={filteredSharedPasswords.filter((pwd) => pwd.category === "Email")}
+                      viewMode={viewMode}
+                      onEdit={handleEdit}
+                      currentUserId={user?.id}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="cloud">
+                    <PasswordsList 
+                      passwords={filteredSharedPasswords.filter((pwd) => pwd.category === "Cloud")}
+                      viewMode={viewMode}
+                      onEdit={handleEdit}
+                      currentUserId={user?.id}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="development">
+                    <PasswordsList 
+                      passwords={filteredSharedPasswords.filter((pwd) => pwd.category === "Development")}
+                      viewMode={viewMode}
+                      onEdit={handleEdit}
+                      currentUserId={user?.id}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="sales">
+                    <PasswordsList 
+                      passwords={filteredSharedPasswords.filter((pwd) => pwd.category === "Sales")}
+                      viewMode={viewMode}
+                      onEdit={handleEdit}
+                      currentUserId={user?.id}
+                    />
+                  </TabsContent>
+                </Tabs>
               )}
-            </TabsContent>
-            
-            <TabsContent value="email">
-              <PasswordsList 
-                passwords={filteredPasswords.filter((pwd) => pwd.category === "Email")}
-                viewMode={viewMode}
-                onEdit={handleEdit}
-                currentUserId={user?.id}
-              />
-            </TabsContent>
-            
-            <TabsContent value="cloud">
-              <PasswordsList 
-                passwords={filteredPasswords.filter((pwd) => pwd.category === "Cloud")}
-                viewMode={viewMode}
-                onEdit={handleEdit}
-                currentUserId={user?.id}
-              />
-            </TabsContent>
-            
-            <TabsContent value="development">
-              <PasswordsList 
-                passwords={filteredPasswords.filter((pwd) => pwd.category === "Development")}
-                viewMode={viewMode}
-                onEdit={handleEdit}
-                currentUserId={user?.id}
-              />
-            </TabsContent>
-            
-            <TabsContent value="sales">
-              <PasswordsList 
-                passwords={filteredPasswords.filter((pwd) => pwd.category === "Sales")}
-                viewMode={viewMode}
-                onEdit={handleEdit}
-                currentUserId={user?.id}
-              />
             </TabsContent>
           </Tabs>
         </div>

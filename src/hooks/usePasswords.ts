@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -63,8 +64,8 @@ export function usePasswords() {
     return `${user.id}-futeur-secure-key`;
   };
 
-  const { data: passwords = [], isLoading } = useQuery({
-    queryKey: ["passwords"],
+  const { data: allPasswords = [], isLoading } = useQuery({
+    queryKey: ["all-passwords"],
     queryFn: async () => {
       if (!user) {
         return [];
@@ -78,33 +79,34 @@ export function usePasswords() {
         .order("created_at", { ascending: false });
 
       if (ownError) {
-        toast.error("Failed to fetch passwords");
+        toast.error("Failed to fetch your passwords");
         throw ownError;
       }
 
-      // Fetch shared passwords - use a more direct approach to get the actual password records
-      const { data: passwordShares, error: sharedError } = await supabase
+      // Fetch the password IDs that have been shared with the user
+      const { data: sharedWithMe, error: sharedWithMeError } = await supabase
         .from("password_shares")
         .select("password_id")
         .eq("shared_with", user.id);
 
-      if (sharedError) {
-        toast.error("Failed to fetch shared passwords");
-        throw sharedError;
+      if (sharedWithMeError) {
+        toast.error("Failed to fetch shared password references");
+        throw sharedWithMeError;
       }
 
       // If there are no shared passwords, just return the own passwords
-      if (!passwordShares || passwordShares.length === 0) {
+      if (!sharedWithMe || sharedWithMe.length === 0) {
         const encryptionKey = getEncryptionKey();
         return ownPasswords.map(pwd => ({
           ...pwd,
           password: decryptData(pwd.password, encryptionKey),
-          username: decryptData(pwd.username, encryptionKey)
+          username: decryptData(pwd.username, encryptionKey),
+          isShared: false
         }));
       }
 
-      // Extract the password IDs that have been shared with the user
-      const sharedPasswordIds = passwordShares.map(share => share.password_id);
+      // Extract the shared password IDs
+      const sharedPasswordIds = sharedWithMe.map(share => share.password_id);
       
       // Fetch the actual shared password records using the IDs
       const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
@@ -117,21 +119,40 @@ export function usePasswords() {
         throw sharedPasswordsError;
       }
 
-      // Combine own and shared passwords
+      // Combine own and shared passwords with decryption
       const encryptionKey = getEncryptionKey();
-      const allPasswords = [
-        ...ownPasswords,
-        ...(sharedPasswords || [])
-      ].map(pwd => ({
+      
+      // Decrypt and mark own passwords
+      const decryptedOwnPasswords = ownPasswords.map(pwd => ({
         ...pwd,
         password: decryptData(pwd.password, encryptionKey),
-        username: decryptData(pwd.username, encryptionKey)
+        username: decryptData(pwd.username, encryptionKey),
+        isShared: false
       }));
+      
+      // Decrypt and mark shared passwords
+      const decryptedSharedPasswords = (sharedPasswords || []).map(pwd => {
+        // Use the owner's encryption key for shared passwords
+        const ownerEncryptionKey = `${pwd.user_id}-futeur-secure-key`;
+        return {
+          ...pwd,
+          password: decryptData(pwd.password, ownerEncryptionKey),
+          username: decryptData(pwd.username, ownerEncryptionKey),
+          isShared: true
+        };
+      });
 
-      return allPasswords;
+      // Return combined array of both own and shared passwords
+      return [...decryptedOwnPasswords, ...decryptedSharedPasswords];
     },
     enabled: !!user,
   });
+
+  // Filter for own passwords
+  const ownPasswords = allPasswords.filter(pwd => !pwd.isShared);
+  
+  // Filter for shared passwords
+  const sharedPasswords = allPasswords.filter(pwd => pwd.isShared);
 
   const addPassword = useMutation({
     mutationFn: async (newPassword: Omit<Password, "id" | "updated_at">) => {
@@ -151,7 +172,7 @@ export function usePasswords() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["passwords"] });
+      queryClient.invalidateQueries({ queryKey: ["all-passwords"] });
       toast.success("Password added successfully");
     },
     onError: () => {
@@ -182,7 +203,7 @@ export function usePasswords() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["passwords"] });
+      queryClient.invalidateQueries({ queryKey: ["all-passwords"] });
       toast.success("Password updated successfully");
     },
     onError: () => {
@@ -196,7 +217,7 @@ export function usePasswords() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["passwords"] });
+      queryClient.invalidateQueries({ queryKey: ["all-passwords"] });
       toast.success("Password deleted successfully");
     },
     onError: () => {
@@ -205,7 +226,9 @@ export function usePasswords() {
   });
 
   return {
-    passwords,
+    allPasswords,
+    ownPasswords,
+    sharedPasswords,
     isLoading,
     addPassword,
     updatePassword,
