@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -117,6 +118,9 @@ export function usePasswords() {
       const sharedPasswordIds = sharedWithMe.map(share => share.password_id);
       console.log("Shared password IDs:", sharedPasswordIds);
       
+      // Debug: Check if the ID array is properly formatted
+      console.log("Password IDs type:", typeof sharedPasswordIds, "Is array:", Array.isArray(sharedPasswordIds));
+      
       // Fetch the actual shared password records using the IDs
       const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
         .from("passwords")
@@ -129,10 +133,16 @@ export function usePasswords() {
         throw sharedPasswordsError;
       }
 
-      console.log("Shared passwords fetched:", sharedPasswords?.length);
+      console.log("Shared passwords fetched:", sharedPasswords?.length, "Details:", sharedPasswords);
+      
+      // If no shared passwords were found, return only own passwords
+      if (!sharedPasswords || sharedPasswords.length === 0) {
+        console.log("No actual shared passwords found in database");
+        return decryptedOwnPasswords;
+      }
       
       // Decrypt and mark shared passwords
-      const decryptedSharedPasswords = (sharedPasswords || []).map(pwd => {
+      const decryptedSharedPasswords = sharedPasswords.map(pwd => {
         // Use the owner's encryption key for shared passwords
         const ownerEncryptionKey = getEncryptionKey(pwd.user_id);
         
