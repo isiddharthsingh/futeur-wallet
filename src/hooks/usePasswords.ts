@@ -142,7 +142,10 @@ export function usePasswords() {
         user_id: user.id,
       };
       
-      const { error } = await supabase.from("passwords").insert([encryptedPassword]);
+      // Remove isShared property before sending to database
+      const { isShared, ...passwordToSave } = encryptedPassword;
+      
+      const { error } = await supabase.from("passwords").insert([passwordToSave]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -156,9 +159,27 @@ export function usePasswords() {
 
   const updatePassword = useMutation({
     mutationFn: async (password: Partial<Password> & { id: string }) => {
-      const encryptionKey = getEncryptionKey(user?.id || "");
+      if (!user) throw new Error("User must be logged in to update passwords");
+      
+      // Find the original password to check if it's owned by the current user
+      const originalPassword = allPasswords.find(p => p.id === password.id);
+      
+      if (!originalPassword) {
+        throw new Error("Password not found");
+      }
+      
+      // Check if current user owns this password
+      if (originalPassword.user_id !== user.id) {
+        toast.error("You can only edit your own passwords");
+        throw new Error("You can only edit your own passwords");
+      }
+      
+      const encryptionKey = getEncryptionKey(user.id);
       
       const updateData: any = { ...password };
+      
+      // Remove isShared property before sending to database
+      delete updateData.isShared;
       
       if (updateData.password) {
         updateData.password = encryptData(updateData.password, encryptionKey);
@@ -168,23 +189,43 @@ export function usePasswords() {
         updateData.username = encryptData(updateData.username, encryptionKey);
       }
       
+      console.log("Updating password with ID:", password.id);
+      
       const { error } = await supabase
         .from("passwords")
         .update(updateData)
         .eq("id", password.id);
-      if (error) throw error;
+        
+      if (error) {
+        console.error("Error updating password:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-passwords"] });
       toast.success("Password updated successfully");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update password error:", error);
       toast.error("Failed to update password");
     },
   });
 
   const deletePassword = useMutation({
     mutationFn: async (id: string) => {
+      // Find the password to check if it's owned by the current user
+      const passwordToDelete = allPasswords.find(p => p.id === id);
+      
+      if (!passwordToDelete) {
+        throw new Error("Password not found");
+      }
+      
+      // Check if current user owns this password
+      if (passwordToDelete.user_id !== user?.id) {
+        toast.error("You can only delete your own passwords");
+        throw new Error("You can only delete your own passwords");
+      }
+      
       const { error } = await supabase.from("passwords").delete().eq("id", id);
       if (error) throw error;
     },
@@ -192,7 +233,8 @@ export function usePasswords() {
       queryClient.invalidateQueries({ queryKey: ["all-passwords"] });
       toast.success("Password deleted successfully");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete password error:", error);
       toast.error("Failed to delete password");
     },
   });
