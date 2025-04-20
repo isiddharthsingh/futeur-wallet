@@ -26,6 +26,14 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
 
     setIsSharing(true);
     try {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast.error("Please enter a valid email address");
+        setIsSharing(false);
+        return;
+      }
+
       // Use our custom function to find the user ID by email
       const { data: userId, error: userError } = await supabase.rpc('get_user_id_by_email', {
         email_input: email
@@ -39,7 +47,7 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
       }
 
       if (!userId) {
-        toast.error("User not found. Make sure the email address is correct.");
+        toast.error("User not found. Make sure the email address is registered.");
         setIsSharing(false);
         return;
       }
