@@ -119,12 +119,14 @@ export function usePasswords() {
       console.log("Shared password IDs:", sharedPasswordIds);
       
       // Fetch the actual shared password records using the IDs
+      // KEY FIX: Use .in() correctly with the array of IDs
       const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
         .from("passwords")
-        .select("*")
+        .select("*, user_id!inner") // Make sure we get the user_id for owner's key
         .in("id", sharedPasswordIds);
       
       if (sharedPasswordsError) {
+        console.error("Error fetching shared passwords:", sharedPasswordsError);
         toast.error("Failed to fetch shared password details");
         throw sharedPasswordsError;
       }
@@ -135,14 +137,30 @@ export function usePasswords() {
       const decryptedSharedPasswords = (sharedPasswords || []).map(pwd => {
         // Use the owner's encryption key for shared passwords
         const ownerEncryptionKey = getEncryptionKey(pwd.user_id);
-        return {
-          ...pwd,
-          password: decryptData(pwd.password, ownerEncryptionKey),
-          username: decryptData(pwd.username, ownerEncryptionKey),
-          isShared: true
-        };
+        
+        try {
+          // Log decryption attempts for debugging
+          console.log(`Decrypting shared password ${pwd.id} from user ${pwd.user_id}`);
+          
+          return {
+            ...pwd,
+            password: decryptData(pwd.password, ownerEncryptionKey),
+            username: decryptData(pwd.username, ownerEncryptionKey),
+            isShared: true
+          };
+        } catch (error) {
+          console.error(`Failed to decrypt shared password ${pwd.id}:`, error);
+          return {
+            ...pwd,
+            password: "**Decryption Error**",
+            username: "**Decryption Error**",
+            isShared: true
+          };
+        }
       });
 
+      console.log("Total own passwords:", decryptedOwnPasswords.length);
+      console.log("Total shared passwords:", decryptedSharedPasswords.length);
       console.log("Returning combined passwords:", 
         decryptedOwnPasswords.length + decryptedSharedPasswords.length);
 

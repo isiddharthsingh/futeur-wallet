@@ -25,6 +25,11 @@ export function PasswordsList({ passwords, viewMode, onEdit, currentUserId }: Pa
   const isMobile = useIsMobile();
   const shouldUseGrid = isMobile || viewMode === "grid";
 
+  console.log("PasswordsList rendering with passwords:", passwords.length);
+  if (passwords.length > 0) {
+    console.log("First password:", passwords[0].title, "Shared:", passwords[0].isShared);
+  }
+
   return (
     <div className={shouldUseGrid ? `grid grid-cols-1 ${isMobile ? "" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4` : "space-y-4"}>
       {passwords.length === 0 ? (
