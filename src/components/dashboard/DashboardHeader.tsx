@@ -37,7 +37,7 @@ export function DashboardHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="flex flex-col space-y-1 p-2">
-                <p className="text-sm font-medium">{user?.email || "User"}</p>
+                <p className="font-medium text-lg">{user?.email || "User"}</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
               <DropdownMenuSeparator />
