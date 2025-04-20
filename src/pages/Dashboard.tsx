@@ -4,6 +4,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardControls } from "@/components/dashboard/DashboardControls";
 import { PasswordsList } from "@/components/dashboard/PasswordsList";
 import { PasswordDialog } from "@/components/PasswordDialog";
+import { MultiSharePasswordDialog } from "@/components/MultiSharePasswordDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePasswords } from "@/hooks/usePasswords";
@@ -88,7 +89,7 @@ export default function Dashboard() {
     setDialogOpen(false);
   };
 
-  const hasPasswordsToShare = ownPasswords.filter(pwd => !pwd.isShared).length > 0;
+  const hasPasswordsToShare = ownPasswords.filter(pwd => pwd.isShared === false).length > 0;
 
   const handleMultiShare = () => {
     setMultiShareDialogOpen(true);
@@ -363,7 +364,7 @@ export default function Dashboard() {
       <MultiSharePasswordDialog
         open={multiShareDialogOpen}
         onOpenChange={setMultiShareDialogOpen}
-        passwords={ownPasswords.filter(pwd => !pwd.isShared)}
+        passwords={ownPasswords.filter(pwd => pwd.isShared === false)}
       />
     </div>
   );
