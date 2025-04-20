@@ -102,7 +102,7 @@ export function usePasswords() {
       const sharedPasswords = sharedWithMe
         .filter(share => share.passwords)
         .map(share => {
-          const pwd = share.passwords as Password;  // Type assertion to fix the error
+          const pwd = share.passwords as Password;
           if (!pwd) return null;
           
           // Decrypt using the owner's encryption key
@@ -114,7 +114,7 @@ export function usePasswords() {
             isShared: true
           };
         })
-        .filter(Boolean) as Password[];  // Type assertion to filter out null values
+        .filter(Boolean) as Password[];
 
       console.log("Shared passwords processed:", sharedPasswords.length);
       
