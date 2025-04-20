@@ -58,10 +58,9 @@ export function usePasswords() {
   };
 
   // Generate encryption key based on user ID
-  const getEncryptionKey = () => {
-    if (!user) return "";
+  const getEncryptionKey = (userId: string) => {
     // Using user ID as part of the encryption key
-    return `${user.id}-futeur-secure-key`;
+    return `${userId}-futeur-secure-key`;
   };
 
   const { data: allPasswords = [], isLoading } = useQuery({
@@ -70,6 +69,8 @@ export function usePasswords() {
       if (!user) {
         return [];
       }
+
+      console.log("Fetching passwords for user:", user.id);
 
       // Fetch user's own passwords
       const { data: ownPasswords, error: ownError } = await supabase
@@ -83,6 +84,8 @@ export function usePasswords() {
         throw ownError;
       }
 
+      console.log("Own passwords fetched:", ownPasswords?.length);
+
       // Fetch the password IDs that have been shared with the user
       const { data: sharedWithMe, error: sharedWithMeError } = await supabase
         .from("password_shares")
@@ -94,19 +97,26 @@ export function usePasswords() {
         throw sharedWithMeError;
       }
 
+      console.log("Shared password references fetched:", sharedWithMe?.length);
+
+      // Decrypt and mark own passwords
+      const encryptionKey = getEncryptionKey(user.id);
+      const decryptedOwnPasswords = ownPasswords.map(pwd => ({
+        ...pwd,
+        password: decryptData(pwd.password, encryptionKey),
+        username: decryptData(pwd.username, encryptionKey),
+        isShared: false
+      }));
+
       // If there are no shared passwords, just return the own passwords
       if (!sharedWithMe || sharedWithMe.length === 0) {
-        const encryptionKey = getEncryptionKey();
-        return ownPasswords.map(pwd => ({
-          ...pwd,
-          password: decryptData(pwd.password, encryptionKey),
-          username: decryptData(pwd.username, encryptionKey),
-          isShared: false
-        }));
+        console.log("No shared passwords found");
+        return decryptedOwnPasswords;
       }
 
       // Extract the shared password IDs
       const sharedPasswordIds = sharedWithMe.map(share => share.password_id);
+      console.log("Shared password IDs:", sharedPasswordIds);
       
       // Fetch the actual shared password records using the IDs
       const { data: sharedPasswords, error: sharedPasswordsError } = await supabase
@@ -119,21 +129,12 @@ export function usePasswords() {
         throw sharedPasswordsError;
       }
 
-      // Combine own and shared passwords with decryption
-      const encryptionKey = getEncryptionKey();
-      
-      // Decrypt and mark own passwords
-      const decryptedOwnPasswords = ownPasswords.map(pwd => ({
-        ...pwd,
-        password: decryptData(pwd.password, encryptionKey),
-        username: decryptData(pwd.username, encryptionKey),
-        isShared: false
-      }));
+      console.log("Shared passwords fetched:", sharedPasswords?.length);
       
       // Decrypt and mark shared passwords
       const decryptedSharedPasswords = (sharedPasswords || []).map(pwd => {
         // Use the owner's encryption key for shared passwords
-        const ownerEncryptionKey = `${pwd.user_id}-futeur-secure-key`;
+        const ownerEncryptionKey = getEncryptionKey(pwd.user_id);
         return {
           ...pwd,
           password: decryptData(pwd.password, ownerEncryptionKey),
@@ -141,6 +142,9 @@ export function usePasswords() {
           isShared: true
         };
       });
+
+      console.log("Returning combined passwords:", 
+        decryptedOwnPasswords.length + decryptedSharedPasswords.length);
 
       // Return combined array of both own and shared passwords
       return [...decryptedOwnPasswords, ...decryptedSharedPasswords];
@@ -154,11 +158,15 @@ export function usePasswords() {
   // Filter for shared passwords
   const sharedPasswords = allPasswords.filter(pwd => pwd.isShared);
 
+  console.log("All passwords:", allPasswords.length);
+  console.log("Own passwords:", ownPasswords.length);
+  console.log("Shared passwords:", sharedPasswords.length);
+
   const addPassword = useMutation({
     mutationFn: async (newPassword: Omit<Password, "id" | "updated_at">) => {
       if (!user) throw new Error("User must be logged in to add passwords");
       
-      const encryptionKey = getEncryptionKey();
+      const encryptionKey = getEncryptionKey(user.id);
       
       // Encrypt sensitive fields before saving
       const encryptedPassword = {
@@ -182,7 +190,7 @@ export function usePasswords() {
 
   const updatePassword = useMutation({
     mutationFn: async (password: Partial<Password> & { id: string }) => {
-      const encryptionKey = getEncryptionKey();
+      const encryptionKey = getEncryptionKey(user?.id || "");
       
       // Create an object with only the fields to update
       const updateData: any = { ...password };
