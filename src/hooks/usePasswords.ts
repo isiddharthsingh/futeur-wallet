@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,6 +58,7 @@ export function usePasswords() {
 
       console.log("Fetching passwords for user:", user.id);
 
+      // Fetch the user's own passwords
       const { data: ownPasswords, error: ownError } = await supabase
         .from("passwords")
         .select("*")
@@ -70,23 +72,28 @@ export function usePasswords() {
 
       console.log("Own passwords fetched:", ownPasswords?.length);
 
+      // Fetch shared passwords using a direct join query
       const { data: sharedWithMe, error: sharedWithMeError } = await supabase
         .from("password_shares")
         .select(`
           password_id,
-          passwords:password_id (
-            *
-          )
+          shared_passwords:passwords(*)
         `)
         .eq("shared_with", user.id);
 
       if (sharedWithMeError) {
         toast.error("Failed to fetch shared passwords");
+        console.error("Shared passwords error:", sharedWithMeError);
         throw sharedWithMeError;
       }
 
-      console.log("Shared passwords fetched:", sharedWithMe?.length);
+      console.log("Shared password references fetched:", sharedWithMe?.length);
+      
+      if (sharedWithMe.length > 0) {
+        console.log("First shared password reference:", sharedWithMe[0]);
+      }
 
+      // Process own passwords (decrypt them)
       const encryptionKey = getEncryptionKey(user.id);
       const decryptedOwnPasswords = ownPasswords.map(pwd => ({
         ...pwd,
@@ -95,10 +102,17 @@ export function usePasswords() {
         isShared: false
       }));
 
+      // Process shared passwords
       const sharedPasswords = sharedWithMe
-        .filter(share => share.passwords)
+        .filter(share => share.shared_passwords)
         .map(share => {
-          const pwd = share.passwords;
+          const pwd = share.shared_passwords;
+          if (!pwd) {
+            console.log(`No password found for share with password_id: ${share.password_id}`);
+            return null;
+          }
+          
+          // Decrypt using the owner's encryption key
           const ownerEncryptionKey = getEncryptionKey(pwd.user_id);
           return {
             ...pwd,
@@ -106,10 +120,11 @@ export function usePasswords() {
             username: decryptData(pwd.username, ownerEncryptionKey),
             isShared: true
           };
-        });
+        })
+        .filter(Boolean); // Remove any null entries
 
       console.log("Processed shared passwords:", sharedPasswords.length);
-
+      
       return [...decryptedOwnPasswords, ...sharedPasswords];
     },
     enabled: !!user,
