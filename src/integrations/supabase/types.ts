@@ -103,23 +103,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_shared_emails_for_password: {
-        Args: { password_id_input: string }
-        Returns: {
-          email: string
-        }[]
-      }
-      get_user_email_by_id: {
-        Args: { user_id_input: string }
-        Returns: string
-      }
-      get_user_emails_by_ids: {
-        Args: { user_ids: string[] }
-        Returns: {
-          id: string
-          email: string
-        }[]
-      }
       get_user_id_by_email: {
         Args: { email_input: string }
         Returns: string
