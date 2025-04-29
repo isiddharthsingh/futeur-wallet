@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Lottie from "lottie-react";
 import loginAnimation from "../../asset/Secure Login.json";
@@ -92,7 +91,7 @@ export default function Dashboard() {
     setDialogOpen(false);
   };
 
-  const hasPasswordsToShare = ownPasswords.filter(pwd => !pwd.isShared).length > 0;
+  const hasPasswordsToShare = ownPasswords.filter(pwd => pwd.isShared === false).length > 0;
 
   const handleMultiShare = () => {
     setMultiShareDialogOpen(true);

@@ -14,7 +14,6 @@ interface Password {
   user_id: string;
   created_at?: string;
   isShared?: boolean;
-  sharedWith?: SharedUser[];
 }
 
 // The interface for the database password (doesn't have isShared field)
@@ -28,12 +27,6 @@ interface DbPassword {
   updated_at: string;
   user_id: string;
   created_at?: string;
-}
-
-interface SharedUser {
-  id: string;
-  email: string;
-  shared_at?: string;
 }
 
 export function usePasswords() {
@@ -105,66 +98,17 @@ export function usePasswords() {
       if (sharedError) {
         console.error("Error fetching shared passwords:", sharedError);
         toast.error("Failed to fetch shared passwords");
-        return [...ownPasswords].map(pwd => ({...pwd, isShared: false}));
+        return [...ownPasswords];
       }
 
-      // For each own password, fetch who it's shared with
-      const sharedWithPromises = ownPasswords.map(async (pwd: DbPassword) => {
-        const { data: shares, error: sharesError } = await supabase
-          .from("password_shares")
-          .select(`
-            shared_with,
-            created_at
-          `)
-          .eq("password_id", pwd.id);
-          
-        if (sharesError) {
-          console.error("Error fetching shares for password:", pwd.id, sharesError);
-          return { ...pwd, isShared: false, sharedWith: [] };
-        }
-        
-        // If there are shares, fetch the user emails
-        if (shares && shares.length > 0) {
-          const sharedWith: SharedUser[] = [];
-          
-          for (const share of shares) {
-            const { data: userData } = await supabase.rpc('get_user_email_by_id', {
-              user_id_input: share.shared_with
-            });
-            
-            if (userData) {
-              sharedWith.push({
-                id: share.shared_with,
-                email: userData,
-                shared_at: share.created_at
-              });
-            }
-          }
-          
-          return { 
-            ...pwd, 
-            isShared: sharedWith.length > 0,
-            sharedWith 
-          };
-        }
-        
-        return { ...pwd, isShared: false, sharedWith: [] };
-      });
-      
       // Process own passwords (decrypt them)
       const encryptionKey = getEncryptionKey(user.id);
-      const decryptedOwnPasswordsPromises = ownPasswords.map(async (pwd: DbPassword, index: number) => {
-        const sharedResult = await sharedWithPromises[index];
-        return {
-          ...pwd,
-          password: encryptionKey ? decryptData(pwd.password, encryptionKey) : "**Decryption Error**",
-          username: encryptionKey ? decryptData(pwd.username, encryptionKey) : "**Decryption Error**",
-          isShared: sharedResult?.isShared || false,
-          sharedWith: sharedResult?.sharedWith || []
-        };
-      });
-      
-      const decryptedOwnPasswords = await Promise.all(decryptedOwnPasswordsPromises);
+      const decryptedOwnPasswords = ownPasswords.map((pwd: DbPassword) => ({
+        ...pwd,
+        password: decryptData(pwd.password, encryptionKey),
+        username: decryptData(pwd.username, encryptionKey),
+        isShared: false
+      }));
 
       // Process shared passwords
       const sharedPasswords = sharedWithMe
@@ -179,8 +123,7 @@ export function usePasswords() {
             ...pwd,
             password: decryptData(pwd.password, ownerEncryptionKey),
             username: decryptData(pwd.username, ownerEncryptionKey),
-            isShared: true,
-            sharedWith: []
+            isShared: true
           };
         })
         .filter(Boolean) as Password[];
