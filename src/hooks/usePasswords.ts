@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -162,7 +163,7 @@ export function usePasswords() {
             username: decryptData(pwd.username, encryptionKey),
             isShared: false,
             sharedWith: sharedUsers
-          };
+          } as Password;
         })
       );
 
@@ -182,7 +183,7 @@ export function usePasswords() {
               username: decryptData(pwd.username, ownerEncryptionKey),
               isShared: true,
               sharedWith: [] // Shared passwords don't need to display with whom they're shared
-            };
+            } as Password;
           })
       );
 
@@ -190,13 +191,13 @@ export function usePasswords() {
       
       console.log("Shared passwords processed:", validSharedPasswords.length);
       
-      return [...ownPasswordsWithSharedInfo, ...validSharedPasswords];
+      return [...ownPasswordsWithSharedInfo, ...validSharedPasswords] as Password[];
     },
     enabled: !!user,
   });
 
-  const ownPasswords = allPasswords.filter(pwd => !pwd.isShared);
-  const sharedPasswords = allPasswords.filter(pwd => pwd.isShared);
+  const ownPasswords = allPasswords.filter(pwd => pwd.isShared !== true);
+  const sharedPasswords = allPasswords.filter(pwd => pwd.isShared === true);
 
   console.log("All passwords:", allPasswords.length);
   console.log("Own passwords:", ownPasswords.length);

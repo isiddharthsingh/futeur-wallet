@@ -166,7 +166,7 @@ export function PasswordCard({
                   variant="ghost" 
                   size="sm"
                   onClick={() => setShowSharedUsers(!showSharedUsers)}
-                  className="h-8 p-1"
+                  className="h-8 px-2 py-1 flex items-center"
                 >
                   <Users className="h-4 w-4 mr-1" />
                   {showSharedUsers ? "Hide" : "Show"}
