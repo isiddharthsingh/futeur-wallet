@@ -1,8 +1,17 @@
+
 import { useState } from "react";
-import { Eye, EyeOff, Copy, Check, Share } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Share, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SharePasswordDialog } from "./SharePasswordDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface SharedUser {
+  id: string;
+  email: string;
+  shared_at?: string;
+}
 
 interface PasswordCardProps {
   id: string;
@@ -14,6 +23,7 @@ interface PasswordCardProps {
   lastUpdated: string;
   onEdit: () => void;
   isShared?: boolean;
+  sharedWith?: SharedUser[];
 }
 
 export function PasswordCard({ 
@@ -25,12 +35,14 @@ export function PasswordCard({
   category, 
   lastUpdated,
   onEdit,
-  isShared = false
+  isShared = false,
+  sharedWith = []
 }: PasswordCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [showSharedUsers, setShowSharedUsers] = useState(false);
   
   const handleCopyPassword = () => {
     navigator.clipboard.writeText(password);
@@ -74,7 +86,26 @@ export function PasswordCard({
             )}
           </div>
           <div className="flex gap-2">
-            {isShared && (
+            {sharedWith && sharedWith.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 cursor-pointer"
+                      onClick={() => setShowSharedUsers(!showSharedUsers)}
+                    >
+                      <Users className="h-3 w-3 mr-1" />
+                      {sharedWith.length}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Click to see who this password is shared with</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {isShared && sharedWith?.length === 0 && (
               <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                 Shared
               </Badge>
@@ -84,6 +115,26 @@ export function PasswordCard({
             </Badge>
           </div>
         </div>
+
+        {showSharedUsers && sharedWith && sharedWith.length > 0 && (
+          <div className="bg-muted/50 p-2 rounded-md">
+            <h4 className="text-sm font-medium mb-1">Shared with:</h4>
+            <ScrollArea className="h-24">
+              <div className="space-y-1">
+                {sharedWith.map((user) => (
+                  <div key={user.id} className="flex justify-between items-center text-sm">
+                    <span>{user.email}</span>
+                    {user.shared_at && (
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(user.shared_at).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
 
         <div className="space-y-4">
           <div className="space-y-2">
