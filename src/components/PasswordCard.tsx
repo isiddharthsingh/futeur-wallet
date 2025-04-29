@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Eye, EyeOff, Copy, Check, Share } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Share, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SharePasswordDialog } from "./SharePasswordDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface PasswordCardProps {
   id: string;
@@ -31,6 +34,20 @@ export function PasswordCard({
   const [copied, setCopied] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sharedWithDialogOpen, setSharedWithDialogOpen] = useState(false);
+  
+  const { data: sharedWithUsers = [], isLoading: sharedUsersLoading } = useQuery({
+    queryKey: ['sharedWithUsers', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('password_shares_with_user')
+        .select('shared_with_email')
+        .eq('password_id', id);
+      if (error) throw error;
+      return (data || []) as {shared_with_email: string}[];
+    },
+    enabled: sharedWithDialogOpen // Only fetch when dialog is open
+  });
   
   const handleCopyPassword = () => {
     navigator.clipboard.writeText(password);
@@ -151,6 +168,10 @@ export function PasswordCard({
             Updated {formattedDate}
           </span>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSharedWithDialogOpen(true)}>
+              <Users className="mr-2 h-4 w-4" />
+              Shared With
+            </Button>
             {!isShared && (
               <>
                 <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
@@ -171,6 +192,30 @@ export function PasswordCard({
         onOpenChange={setShareDialogOpen}
         passwordId={id}
       />
+      
+      <Dialog open={sharedWithDialogOpen} onOpenChange={setSharedWithDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Shared With</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {sharedUsersLoading ? (
+              <p className="text-center">Loading shared users...</p>
+            ) : sharedWithUsers.length === 0 ? (
+              <p className="text-center text-muted-foreground">This password is not shared with anyone.</p>
+            ) : (
+              <ul className="space-y-2">
+                {sharedWithUsers.map((user, index) => (
+                  <li key={index} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span>{user.shared_with_email}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

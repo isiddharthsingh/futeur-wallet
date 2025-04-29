@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PasswordEntry {
   id?: string;
@@ -51,6 +52,19 @@ export function PasswordDialog({
     password: "",
     url: "",
     category: "Other"
+  });
+  const { data: shareRecords = [], isLoading: sharesLoading } = useQuery({
+    queryKey: ['passwordShares', entry?.id],
+    queryFn: async () => {
+      if (!entry?.id) return [];
+      const { data, error } = await supabase
+        .from('password_shares_with_user')
+        .select('shared_with_email')
+        .eq('password_id', entry.id);
+      if (error) throw error;
+      return (data || []) as {shared_with_email: string}[];
+    },
+    enabled: !!entry?.id
   });
 
   useEffect(() => {
@@ -104,6 +118,22 @@ export function PasswordDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
+          {entry?.id && (
+            <div className="mb-4">
+              <h4 className="font-semibold">Shared With</h4>
+              {sharesLoading ? (
+                <p>Loading...</p>
+              ) : shareRecords.length === 0 ? (
+                <p>Not shared with anyone</p>
+              ) : (
+                <ul className="list-disc pl-5">
+                  {shareRecords.map((r, idx) => (
+                    <li key={idx}>{r.shared_with_email}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
           <DialogHeader>
             <DialogTitle>
               {entry?.id ? "Edit Password" : "Add New Password"}
