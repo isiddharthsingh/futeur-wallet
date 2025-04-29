@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import Lottie from "lottie-react";
+// Use the JSON format with proper type declaration
+import loginAnimation from "../../asset/Secure Login.json";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [credentials, setCredentials] = useState<{email: string, password: string, type: 'signin' | 'signup'} | null>(null);
   const {
     signIn,
     signUp,
@@ -23,22 +29,51 @@ export default function Login() {
     session
   } = useAuth();
   const navigate = useNavigate();
+  // Effect to handle delayed sign in after animation
   useEffect(() => {
-    if (session) {
+    let timer: number;
+    
+    if (showAnimation && credentials) {
+      timer = window.setTimeout(async () => {
+        try {
+          if (credentials.type === 'signin') {
+            await signIn(credentials.email, credentials.password);
+            toast.success('Successfully signed in!');
+            setShowAnimation(false);
+            navigate('/dashboard');
+          } else {
+            await signUp(credentials.email, credentials.password);
+            toast.success('Registration successful! Please check your email to confirm your account.');
+            setShowAnimation(false);
+          }
+        } catch (error: any) {
+          toast.error(error.message || 'An error occurred');
+          setShowAnimation(false);
+        }
+        setCredentials(null);
+      }, 5000);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [showAnimation, credentials, signIn, navigate]);
+  
+  // Handle initial session redirect
+  useEffect(() => {
+    if (session && !showAnimation) {
       navigate('/dashboard');
     }
-  }, [session, navigate]);
+  }, [session, showAnimation, navigate]);
   const handleAuth = async (type: 'signin' | 'signup') => {
     setIsLoading(true);
     try {
-      if (type === 'signin') {
-        await signIn(email, password);
-        toast.success('Successfully signed in!');
-      } else {
-        await signUp(email, password);
-        toast.success('Registration successful! Please check your email to confirm your account.');
-      }
+      // Store credentials and show animation for both signin and signup
+      setCredentials({ email, password, type });
+      setShowAnimation(true);
     } catch (error: any) {
+      setShowAnimation(false);
+      setCredentials(null);
       toast.error(error.message || 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -58,6 +93,23 @@ export default function Login() {
     }
   };
   return <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative">
+      {showAnimation && (
+        <div className="fixed inset-0 bg-background/50 dark:bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center">
+          <div className="w-64 h-64">
+            <Lottie 
+              animationData={loginAnimation} 
+              loop={true} 
+              autoplay={true}
+              rendererSettings={{
+                preserveAspectRatio: 'xMidYMid slice'
+              }}
+            />
+          </div>
+          <p className="text-primary font-bold mt-4 text-center">
+            {credentials?.type === 'signup' ? 'Creating account...' : 'Signing in...'}
+          </p>
+        </div>
+      )}
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
