@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import Lottie from "lottie-react";
+import loginAnimation from "../../asset/Secure Login.json";
 import { useNavigate } from "react-router-dom";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardControls } from "@/components/dashboard/DashboardControls";
@@ -97,8 +99,18 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background dark:bg-black/90">
+        <div className="w-64 h-64">
+          <Lottie 
+            animationData={loginAnimation} 
+            loop={true} 
+            autoplay={true}
+            rendererSettings={{
+              preserveAspectRatio: 'xMidYMid slice'
+            }}
+          />
+        </div>
+        <p className="text-primary font-bold mt-4 text-center">Loading your vault...</p>
       </div>
     );
   }
