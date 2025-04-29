@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface SharedUser {
+  email: string;
+  shared_at: string;
+}
+
 interface Password {
   id: string;
   title: string;
@@ -14,6 +19,7 @@ interface Password {
   user_id: string;
   created_at?: string;
   isShared?: boolean;
+  sharedWith?: SharedUser[];
 }
 
 // The interface for the database password (doesn't have isShared field)
@@ -63,6 +69,48 @@ export function usePasswords() {
     return `${userId}-futeur-secure-key`;
   };
 
+  // Function to get shared users information for a password
+  const getSharedUsers = async (passwordId: string): Promise<SharedUser[]> => {
+    try {
+      // First, get all the users with whom the password is shared
+      const { data: shares, error: sharesError } = await supabase
+        .from("password_shares")
+        .select("shared_with, created_at")
+        .eq("password_id", passwordId);
+      
+      if (sharesError || !shares || shares.length === 0) {
+        return [];
+      }
+
+      // Extract user IDs from the shares
+      const userIds = shares.map(share => share.shared_with);
+      
+      // Get user emails for these IDs using the Supabase function
+      const { data: usersData, error: usersError } = await supabase
+        .rpc('get_user_emails_by_ids', { user_ids: userIds });
+      
+      if (usersError || !usersData) {
+        console.error("Error fetching user emails:", usersError);
+        return [];
+      }
+      
+      // Map emails to shared users
+      const sharedUsers = shares.map(share => {
+        // Find the corresponding user email
+        const user = usersData.find(u => u.id === share.shared_with);
+        return {
+          email: user ? user.email : 'Unknown user',
+          shared_at: share.created_at
+        };
+      });
+      
+      return sharedUsers;
+    } catch (error) {
+      console.error("Error getting shared users:", error);
+      return [];
+    }
+  };
+
   const { data: allPasswords = [], isLoading } = useQuery({
     queryKey: ["all-passwords"],
     queryFn: async () => {
@@ -103,34 +151,46 @@ export function usePasswords() {
 
       // Process own passwords (decrypt them)
       const encryptionKey = getEncryptionKey(user.id);
-      const decryptedOwnPasswords = ownPasswords.map((pwd: DbPassword) => ({
-        ...pwd,
-        password: decryptData(pwd.password, encryptionKey),
-        username: decryptData(pwd.username, encryptionKey),
-        isShared: false
-      }));
-
-      // Process shared passwords
-      const sharedPasswords = sharedWithMe
-        .filter(share => share.passwords)
-        .map(share => {
-          const pwd = share.passwords as DbPassword;
-          if (!pwd) return null;
-          
-          // Decrypt using the owner's encryption key
-          const ownerEncryptionKey = getEncryptionKey(pwd.user_id);
+      
+      // Fetch shared users information for own passwords
+      const ownPasswordsWithSharedInfo = await Promise.all(
+        ownPasswords.map(async (pwd: DbPassword) => {
+          const sharedUsers = await getSharedUsers(pwd.id);
           return {
             ...pwd,
-            password: decryptData(pwd.password, ownerEncryptionKey),
-            username: decryptData(pwd.username, ownerEncryptionKey),
-            isShared: true
+            password: decryptData(pwd.password, encryptionKey),
+            username: decryptData(pwd.username, encryptionKey),
+            isShared: false,
+            sharedWith: sharedUsers
           };
         })
-        .filter(Boolean) as Password[];
+      );
 
-      console.log("Shared passwords processed:", sharedPasswords.length);
+      // Process shared passwords
+      const sharedPasswords = await Promise.all(
+        sharedWithMe
+          .filter(share => share.passwords)
+          .map(async (share) => {
+            const pwd = share.passwords as DbPassword;
+            if (!pwd) return null;
+            
+            // Decrypt using the owner's encryption key
+            const ownerEncryptionKey = getEncryptionKey(pwd.user_id);
+            return {
+              ...pwd,
+              password: decryptData(pwd.password, ownerEncryptionKey),
+              username: decryptData(pwd.username, ownerEncryptionKey),
+              isShared: true,
+              sharedWith: [] // Shared passwords don't need to display with whom they're shared
+            };
+          })
+      );
+
+      const validSharedPasswords = sharedPasswords.filter(Boolean) as Password[];
       
-      return [...decryptedOwnPasswords, ...sharedPasswords];
+      console.log("Shared passwords processed:", validSharedPasswords.length);
+      
+      return [...ownPasswordsWithSharedInfo, ...validSharedPasswords];
     },
     enabled: !!user,
   });
@@ -156,7 +216,7 @@ export function usePasswords() {
       };
       
       // Remove isShared property before sending to database
-      const { isShared, ...passwordToSave } = encryptedPassword;
+      const { isShared, sharedWith, ...passwordToSave } = encryptedPassword;
       
       const { error } = await supabase.from("passwords").insert([passwordToSave]);
       if (error) throw error;
@@ -193,6 +253,7 @@ export function usePasswords() {
       
       // Remove isShared property before sending to database
       delete updateData.isShared;
+      delete updateData.sharedWith;
       
       if (updateData.password) {
         updateData.password = encryptData(updateData.password, encryptionKey);

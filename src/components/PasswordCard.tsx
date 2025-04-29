@@ -1,8 +1,15 @@
+
 import { useState } from "react";
-import { Eye, EyeOff, Copy, Check, Share } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Share, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SharePasswordDialog } from "./SharePasswordDialog";
+import { Card, CardContent } from "@/components/ui/card";
+
+interface SharedUser {
+  email: string;
+  shared_at: string;
+}
 
 interface PasswordCardProps {
   id: string;
@@ -14,6 +21,7 @@ interface PasswordCardProps {
   lastUpdated: string;
   onEdit: () => void;
   isShared?: boolean;
+  sharedWith?: SharedUser[];
 }
 
 export function PasswordCard({ 
@@ -25,12 +33,14 @@ export function PasswordCard({
   category, 
   lastUpdated,
   onEdit,
-  isShared = false
+  isShared = false,
+  sharedWith = []
 }: PasswordCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [showSharedUsers, setShowSharedUsers] = useState(false);
   
   const handleCopyPassword = () => {
     navigator.clipboard.writeText(password);
@@ -144,6 +154,43 @@ export function PasswordCard({
               </div>
             </div>
           </div>
+          
+          {/* Shared With Section */}
+          {sharedWith && sharedWith.length > 0 && (
+            <div className="space-y-2 pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Shared with {sharedWith.length} user{sharedWith.length !== 1 ? 's' : ''}
+                </label>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowSharedUsers(!showSharedUsers)}
+                  className="h-8 p-1"
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  {showSharedUsers ? "Hide" : "Show"}
+                </Button>
+              </div>
+              
+              {showSharedUsers && (
+                <Card className="overflow-hidden">
+                  <CardContent className="p-2">
+                    <ul className="text-sm space-y-2">
+                      {sharedWith.map((user, index) => (
+                        <li key={index} className="flex justify-between items-center p-2 hover:bg-muted rounded">
+                          <span className="font-medium">{user.email}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(user.shared_at).toLocaleDateString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-between items-center pt-2 border-t">
