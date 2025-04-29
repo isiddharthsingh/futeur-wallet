@@ -44,6 +44,13 @@ export function PasswordsList({
   // Filter out shared passwords to only show own passwords for multi-sharing
   const ownPasswords = passwords.filter(pwd => !pwd.isShared && pwd.user_id === currentUserId);
   
+  // Console logs for debugging
+  console.log("PasswordsList rendering with passwords:", passwords.length);
+  console.log("Own passwords for sharing:", ownPasswords.length);
+  if (passwords.length > 0) {
+    console.log("First password:", passwords[0].title, "Shared:", passwords[0].isShared);
+  }
+  
   return <>
       {ownPasswords.length > 0 && <div className="mb-4">
           <Button variant="outline" size="sm" onClick={() => setMultiShareOpen(true)}>
