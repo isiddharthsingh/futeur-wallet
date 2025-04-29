@@ -100,7 +100,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      password_shares_with_user: {
+        Row: {
+          id: string
+          password_id: string
+          shared_by: string
+          shared_with: string
+          created_at: string
+          shared_with_email: string
+          shared_with_name: string | null
+        }
+      }
     }
     Functions: {
       get_user_id_by_email: {
