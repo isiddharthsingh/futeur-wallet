@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Share, X } from "lucide-react";
+import { sendPasswordSharedEmail } from "@/integrations/emailjs/client";
 
 interface SharePasswordDialogProps {
   open: boolean;
@@ -17,6 +18,26 @@ interface SharePasswordDialogProps {
 export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePasswordDialogProps) {
   const [email, setEmail] = useState("");
   const [isSharing, setIsSharing] = useState(false);
+  const [passwordTitle, setPasswordTitle] = useState("");
+  
+  // Fetch password details when dialog opens
+  useEffect(() => {
+    if (open && passwordId) {
+      const fetchPasswordDetails = async () => {
+        const { data, error } = await supabase
+          .from('passwords')
+          .select('title')
+          .eq('id', passwordId)
+          .single();
+          
+        if (data) {
+          setPasswordTitle(data.title);
+        }
+      };
+      
+      fetchPasswordDetails();
+    }
+  }, [open, passwordId]);
 
   const handleShare = async () => {
     if (!email) {
@@ -81,6 +102,19 @@ export function SharePasswordDialog({ open, onOpenChange, passwordId }: SharePas
         return;
       }
 
+      // Get current user's name or email for the notification
+      const currentUserEmail = user.email || 'A user';
+      const currentUserName = user.user_metadata?.full_name || currentUserEmail;
+      
+      // Send email notification
+      await sendPasswordSharedEmail({
+        to_email: email,
+        from_name: currentUserName,
+        password_title: passwordTitle || 'a password',
+        message: `${currentUserName} has shared a password with you in Futeur Vault. Log in to view it.`
+      });
+      // Email errors are handled silently in the sendPasswordSharedEmail function
+      
       toast.success("Password shared successfully");
       setEmail("");
       onOpenChange(false);
