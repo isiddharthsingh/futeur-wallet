@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Eye, EyeOff, Copy, Check, Share, Users } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Eye, EyeOff, Copy, Check, Share, Users, Trash2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SharePasswordDialog } from "./SharePasswordDialog";
@@ -36,17 +37,40 @@ export function PasswordCard({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [sharedWithDialogOpen, setSharedWithDialogOpen] = useState(false);
   
+  const queryClient = useQueryClient();
+  
   const { data: sharedWithUsers = [], isLoading: sharedUsersLoading } = useQuery({
     queryKey: ['sharedWithUsers', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('password_shares_with_user')
-        .select('shared_with_email')
+        .select('id, shared_with_email')
         .eq('password_id', id);
       if (error) throw error;
-      return (data || []) as {shared_with_email: string}[];
+      return (data || []) as {id: string, shared_with_email: string}[];
     },
     enabled: sharedWithDialogOpen // Only fetch when dialog is open
+  });
+  
+  const unsharePassword = useMutation({
+    mutationFn: async (shareId: string) => {
+      // Call the server-side function that bypasses RLS
+      const { data, error } = await supabase
+        .rpc('revoke_password_share', {
+          share_id: shareId
+        });
+      
+      if (error) throw error;
+      if (!data) throw new Error('Failed to revoke access');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sharedWithUsers', id] });
+      toast.success("Access revoked successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to revoke access:", error);
+      toast.error("Failed to revoke access");
+    }
   });
   
   const handleCopyPassword = () => {
@@ -206,9 +230,23 @@ export function PasswordCard({
             ) : (
               <ul className="space-y-2">
                 {sharedWithUsers.map((user, index) => (
-                  <li key={index} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{user.shared_with_email}</span>
+                  <li key={index} className="flex items-center justify-between gap-2 p-2 rounded-md bg-secondary/50">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>{user.shared_with_email}</span>
+                    </div>
+                    {!isShared && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => unsharePassword.mutate(user.id)}
+                        disabled={unsharePassword.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Revoke access</span>
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
