@@ -97,16 +97,17 @@ export function PasswordCard({
   
   return (
     <>
-      <div className="bg-card rounded-lg border p-6 space-y-4 hover:shadow-md transition-shadow">
+      <div className="bg-card rounded-lg border p-4 sm:p-6 space-y-3 hover:shadow-md transition-shadow overflow-hidden">
         <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <h3 className="text-xl font-semibold">{title}</h3>
+          <div className="space-y-1 min-w-0 flex-1 mr-2">
+            <h3 className="text-xl font-semibold truncate">{title}</h3>
             {url ? (
               <a 
                 href={url.startsWith('http') ? url : `https://${url}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors block truncate"
+                title={url}
               >
                 {url}
               </a>
@@ -130,12 +131,12 @@ export function PasswordCard({
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">Username</label>
             <div className="flex items-center justify-between">
-              <span className="font-medium">{username}</span>
+              <span className="font-medium truncate max-w-[70%]" title={username}>{username}</span>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={handleCopyUsername}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 flex-shrink-0"
               >
                 {copiedUsername ? (
                   <Check className="h-4 w-4 text-success" />
@@ -150,10 +151,10 @@ export function PasswordCard({
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">Password</label>
             <div className="flex items-center justify-between">
-              <span className="font-medium tracking-wider">
+              <span className="font-medium tracking-wider truncate max-w-[70%]" title={showPassword ? password : '••••••••'}>
                 {showPassword ? password : '•'.repeat(8)}
               </span>
-              <div className="flex space-x-1">
+              <div className="flex space-x-1 flex-shrink-0">
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -187,11 +188,11 @@ export function PasswordCard({
           </div>
         </div>
 
-        <div className="flex justify-between items-center pt-2 border-t">
+        <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-2 pt-2 border-t">
           <span className="text-sm text-muted-foreground">
             Updated {formattedDate}
           </span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
             <Button variant="outline" size="sm" onClick={() => setSharedWithDialogOpen(true)}>
               <Users className="mr-2 h-4 w-4" />
               Shared With
