@@ -1,73 +1,123 @@
-# Welcome to your Lovable project
+# FuteurVault: Secure Password Management Solution
 
-## Project info
+![FuteurVault Logo](https://via.placeholder.com/150x50?text=FuteurVault)
 
-**URL**: https://lovable.dev/projects/cd4f720d-4b76-4323-afc5-7db80c47b6fa
+## Executive Summary
 
-## How can I edit this code?
+FuteurVault is a state-of-the-art password management solution designed to help individuals and organizations securely store, manage, and share their sensitive credentials. With its intuitive interface and robust security features, FuteurVault ensures your digital assets remain protected while enabling seamless collaboration when needed.
 
-There are several ways of editing your application.
+## Core Features
 
-**Use Lovable**
+### 🔒 Secure Credential Storage
+- **Password Vault**: Store all your passwords in one secure, encrypted location
+- **Category Organization**: Organize passwords by categories (e.g., Work, Personal, Finance)
+- **URL Integration**: Associate websites with stored credentials for easy access
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/cd4f720d-4b76-4323-afc5-7db80c47b6fa) and start prompting.
+### 👁️ User-Friendly Interface
+- **Modern Design**: Clean, intuitive interface that's easy to navigate
+- **Dark/Light Mode**: Switch between dark and light themes based on preference
+- **Responsive Layout**: Works perfectly on desktop and mobile devices
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🔑 Password Management
+- **Password Visibility Toggle**: Show/hide password with a single click
+- **One-Click Copy**: Copy usernames and passwords to clipboard without exposing them
+- **Last Updated Tracking**: See when credentials were last modified
 
-**Use your preferred IDE**
+### 🤝 Secure Sharing
+- **Colleague Collaboration**: Securely share passwords with team members
+- **Revocable Access**: Remove access privileges at any time
+- **Sharing Overview**: See which passwords are shared and with whom
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📧 Email Notifications
+- **Share Alerts**: Recipients get email notifications when passwords are shared with them
+- **Personalized Messaging**: Include custom messages when sharing credentials
+- **Sender Information**: Recipients see who shared the password with them
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🔐 Security First
+- **Protected Routes**: Secure access management throughout the application
+- **Authentication Safeguards**: Multi-layered security preventing unauthorized access
+- **Encryption**: State-of-the-art encryption for all stored data
 
-Follow these steps:
+### ✨ Delightful User Experience
+- **Animated Transitions**: Smooth, engaging animations throughout the user journey
+- **Sign-in Experience**: Captivating sign-in animation for a premium feel
+- **Toast Notifications**: Clear feedback for all user actions
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## How FuteurVault Works
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 1. Secure Sign-In
+Users access FuteurVault through a secure login process with an engaging animation that confirms successful authentication while the system prepares the dashboard.
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2. Dashboard Overview
+Upon login, users see their password vault organized by categories. Each password card displays essential information while keeping sensitive data hidden by default.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### 3. Password Management
+Users can:
+- View stored passwords securely
+- Copy credentials to clipboard with one click
+- Toggle password visibility
+- Edit password details as needed
 
-**Edit a file directly in GitHub**
+### 4. Sharing Capabilities
+When collaboration is necessary, users can:
+- Share passwords with colleagues via their email address
+- See a list of users who have access to shared passwords
+- Revoke access with a single click
+- Receive notification confirmation when sharing is successful
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 5. Security Controls
+FuteurVault implements multiple security layers:
+- Route protection preventing unauthorized access
+- Secure database connections
+- Email verification processes
 
-**Use GitHub Codespaces**
+## Business Benefits
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### For Management
+- **Reduced Security Risks**: Centralized credential management minimizes the risk of password-related breaches
+- **Improved Compliance**: Better control over who has access to critical systems
+- **Operational Efficiency**: Less time wasted on password resets and access management
 
-## What technologies are used for this project?
+### For Teams
+- **Seamless Collaboration**: Share access to systems without compromising security
+- **Reduced Friction**: Eliminate insecure password sharing methods (sticky notes, emails, chat)
+- **Accountability**: Clear tracking of who has access to which credentials
 
-This project is built with:
+### For IT Departments
+- **Enhanced Security Posture**: Better password hygiene across the organization
+- **Reduced Support Burden**: Fewer password reset requests
+- **Visibility**: Clear overview of access rights across systems
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Technical Implementation
 
-## How can I deploy this project?
+FuteurVault is built with modern web technologies including:
+- React for a responsive, component-based interface
+- TypeScript for type safety and code reliability
+- Supabase for secure backend database services
+- EmailJS for notification services
+- Tailwind CSS and shadcn/ui for a polished user interface
 
-Simply open [Lovable](https://lovable.dev/projects/cd4f720d-4b76-4323-afc5-7db80c47b6fa) and click on Share -> Publish.
+## Getting Started
 
-## Can I connect a custom domain to my Lovable project?
+### For Administrators
+1. Access the secure administration console
+2. Set up user accounts and access permissions
+3. Configure security policies
+4. Monitor usage and access logs
 
-Yes, you can!
+### For End Users
+1. Receive secure login credentials from your administrator
+2. Sign in to FuteurVault using your credentials
+3. Add your passwords or access shared passwords
+4. Begin managing and sharing credentials securely
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Support and Resources
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+For additional support or questions about FuteurVault, please contact:
+- Email: support@futeurvault.com
+- Documentation: https://docs.futeurvault.com
+- Support Portal: https://support.futeurvault.com
+
+---
+
+© 2025 Futeur - Ensuring Your Digital Future
